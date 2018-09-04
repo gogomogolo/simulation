@@ -1,12 +1,12 @@
 from contracts.BooleanExpressionMinimizer import BooleanExpressionMinimizer
+from quine_mccluskey.qm import QuineMcCluskey
 
 
 class QuineMcCluskey(BooleanExpressionMinimizer):
-    def __init__(self, boolean_exp, n_var):
+    def __init__(self, boolean_exp):
         self.boolean_exp = boolean_exp
-        self.n_var = n_var
         self.minimized_exp = []
 
     def minimize(self):
-        print("adem")
-
+        self.minimized_exp = QuineMcCluskey.simplify(ones=self.boolean_exp)
+        return self.minimized_exp
