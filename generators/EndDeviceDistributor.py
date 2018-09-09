@@ -19,7 +19,7 @@ def distribute(distribution):
         if len(end_device_distribution) == len(Constants.SFs):
             device_id = 0
 
-            for i in range(0, len(constants.SFs)):
+            for i in range(0, len(Constants.SFs)):
                 for j in range(0, end_device_distribution[i]):
                     end_devices.append(EndDevice(bin(device_id+j)[2:], Constants.SFs[i]))
                 device_id += end_device_distribution[i]
