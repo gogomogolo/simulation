@@ -1,15 +1,10 @@
 import parameters.Constants as Constants
 
-from generators.EndDeviceDistributor import distribute
-from distributions.Exponential import Exponential
+from processors.Preprocessor import initialize
+from processors.Mainprocessor import run
+from processors.Postprocessor import print_results
 
 
-Constants.END_DEVICE_NUMBER = 100
-
-distribute(Exponential(6, 8))
-
-
-Constants.END_DEVICE_NUMBER = 10
-
-
-distribute(Exponential(6, 8))
+initialize(1000, 0.1, 60, 12, 7)
+run()
+print_results()
