@@ -1,5 +1,7 @@
 import parameters.Constants as Constants
 import parameters.Results as Results
+import logging
+import sys
 
 from minimizers.QMC import QMC
 from distributions.Exponential import Exponential
@@ -12,8 +14,17 @@ message_transferable_eds = []
 message_transferred_eds = []
 message_untransferable_eds = []
 
+formatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
+                              datefmt='%Y-%m-%d %H:%M:%S')
+screen_handler = logging.StreamHandler(stream=sys.stdout)
+screen_handler.setFormatter(formatter)
+logger = logging.getLogger(__name__)
+logger.addHandler(screen_handler)
+logger.setLevel(logging.DEBUG)
+
 
 def run():
+    logger.info("<run> Simulation is starting...")
     global message_transferable_eds
     global message_transferred_eds
     global message_untransferable_eds
@@ -36,6 +47,7 @@ def run():
     occurrence = 0
 
     while (gateway_message_period / end_device_message_period) != occurrence:
+        logger.debug(" <run> occurrence: " + str(occurrence))
         index_of_transmiters = send_message(bernoulli)
         update_transmission_status(end_devices, index_of_transmiters)
         occurrence += 1
@@ -44,14 +56,20 @@ def run():
     ack_all_devices_with_same_ack(message_transferred_eds)
     ack_all_devices_with_different_ack_respect_to_sf(end_devices, message_transferred_eds)
 
+    Results.NUMBER_OF_FAILED_DEVICES = len(message_untransferable_eds)
+    Results.NUMBER_OF_TRANSMITTERS = len(message_transferred_eds)
+    Results.NUMBER_OF_SUSPENDED_DEVICES = len(message_transferable_eds)
+
 
 def send_message(distribution):
+    logger.info(" <send_message> ")
     global message_transferable_eds
     observation = distribution.sample()
     return [x for x in range(0, len(observation)) if observation[x] == 1 and x in message_transferable_eds]
 
 
 def update_transmission_status(end_devices, transmitters_index):
+    logger.info(" <update_transmission_status> ")
     global message_untransferable_eds
     global message_transferred_eds
     global message_transferable_eds
@@ -68,6 +86,7 @@ def update_transmission_status(end_devices, transmitters_index):
 
 
 def ack_all_devices_with_same_ack(transmitters_index):
+    logger.info("<ack_all_devices_with_same_ack> Boolean expressions are being created for acking each devices...")
     qmc = QMC(transmitters_index)
     minimized_exp = qmc.minimize()
 
@@ -78,6 +97,9 @@ def ack_all_devices_with_same_ack(transmitters_index):
 
 
 def ack_all_devices_with_different_ack_respect_to_sf(end_devices, transmitters_index):
+    logger.info("<ack_all_devices_with_different_ack_respect_to_sf> "
+                "Boolean expressions are being created for acking each spreading factor type"
+                "end devices ...")
     sf_to_index = create_sf_to_index_dict(end_devices, transmitters_index)
 
     sf_to_exp = {}
