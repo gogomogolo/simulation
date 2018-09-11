@@ -10,9 +10,9 @@ from models.Gateway import Gateway
 from generators.EndDeviceDistributor import distribute
 from time import sleep
 
-message_transferable_eds = []
-message_transferred_eds = []
-message_untransferable_eds = []
+message_transferable_eds = {}
+message_transferred_eds = {}
+message_untransferable_eds = {}
 
 formatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
                               datefmt='%Y-%m-%d %H:%M:%S')
@@ -42,7 +42,7 @@ def run():
     end_devices = distribute(exponential)
     gateway = Gateway("GW1", end_devices)
 
-    message_transferable_eds = [x for x in range(0, len(end_devices))]
+    message_transferable_eds = {x: x for x in range(0, len(end_devices))}
 
     occurrence = 0
 
@@ -65,7 +65,8 @@ def send_message(distribution):
     logger.info(" <send_message> ")
     global message_transferable_eds
     observation = distribution.sample()
-    return [x for x in range(0, len(observation)) if observation[x] == 1 and x in message_transferable_eds]
+    return [x for x in range(0, len(observation)) if observation[x] == 1 and
+            message_transferable_eds.get(x) is not None]
 
 
 def update_transmission_status(end_devices, transmitters_index):
@@ -78,16 +79,17 @@ def update_transmission_status(end_devices, transmitters_index):
 
     for sf in sf_to_index:
         if len(sf_to_index.get(sf)) > 1:
-            message_untransferable_eds += sf_to_index.get(sf)
+            message_untransferable_eds.update({x: x for x in sf_to_index.get(sf)})
         else:
-            message_transferred_eds += sf_to_index.get(sf)
+            message_transferred_eds.update({x: x for x in sf_to_index.get(sf)})
 
-    message_transferable_eds = [x for x in range(0, len(end_devices)) if x not in message_untransferable_eds and x not in message_transferred_eds]
+    message_transferable_eds = {x: x for x in range(0, len(end_devices)) if message_untransferable_eds.get(x) is None
+                                and message_transferred_eds.get(x) is None}
 
 
 def ack_all_devices_with_same_ack(transmitters_index):
     logger.info("<ack_all_devices_with_same_ack> Boolean expressions are being created for acking each devices...")
-    qmc = QMC(transmitters_index)
+    qmc = QMC([key for key in transmitters_index])
     minimized_exp = qmc.minimize()
 
     for minterm in minimized_exp:
