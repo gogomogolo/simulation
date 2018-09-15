@@ -64,9 +64,10 @@ def run():
 def send_message(distribution):
     logger.info(" <send_message> ")
     global message_transferable_eds
+    setattr(distribution, 'size', len(message_transferable_eds))
     observation = distribution.sample()
-    return [x for x in range(0, len(observation)) if observation[x] == 1 and
-            message_transferable_eds.get(x) is not None]
+    transferrables = list(message_transferable_eds.values())
+    return [transferrables[x] for x in range(0, len(observation)) if observation[x] == 1]
 
 
 def update_transmission_status(end_devices, transmitters_index):
@@ -103,6 +104,8 @@ def ack_all_devices_with_different_ack_respect_to_sf(end_devices, transmitters_i
                 "Boolean expressions are being created for acking each spreading factor type"
                 "end devices ...")
     sf_to_index = create_sf_to_index_dict(end_devices, transmitters_index)
+
+    Results.SPREADING_FACTOR_BASED_NUMBER_OF_END_DEVICES = {key: len(sf_to_index[key]) for key in sf_to_index}
 
     sf_to_exp = {}
 

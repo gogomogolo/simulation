@@ -37,3 +37,6 @@ def print_results():
             "\t\tBIT COUNT OF THE POSSIBLE DEVICE ID: " + str(Results.DEVICE_ID_LENGTH_IN_BIT_DIFFERENT_ACK) + "\n")
         result_file.write(
             "\t\tBIT COUNT OF MAC PAYLOAD OF THE GENERATED ACK: " + str(Results.MAC_PAYLOAD_IN_BIT_DIFFERENT_ACK) + "\n")
+        result_file.write(
+            "\t\tSPREADING FACTOR BASED NUMBER OF END DEVICES: " + str(
+                Results.SPREADING_FACTOR_BASED_NUMBER_OF_END_DEVICES) + "\n")
