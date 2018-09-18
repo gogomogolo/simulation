@@ -2,14 +2,13 @@ import parameters.Constants as Constants
 import parameters.Results as Results
 import logging
 import sys
+import generators.UplinkTransmissionObserverGenerator as UplinkTransmissionObserverGenerator
+import generators.SuperGroupGenerator as SuperGroupGenerator
+import threading
 
 from minimizers.QMC import QMC
 from distributions.Exponential import Exponential
-from distributions.Bernoulli import Bernoulli
-from models.Gateway import Gateway
 from generators.EndDeviceDistributor import distribute
-from time import sleep
-from generators.SuperGroupGenerator import generate
 
 message_transferable_eds = {}
 message_transferred_eds = {}
@@ -26,35 +25,28 @@ logger.setLevel(logging.DEBUG)
 
 def run():
     logger.info("<run> Simulation is starting...")
-    global message_transferable_eds
-    global message_transferred_eds
-    global message_untransferable_eds
+    group_id_to_finalized_observers = {}
 
-    end_device_message_period = Constants.END_DEVICE_MESSAGE_PERIOD
-    gateway_message_period = Constants.GATEWAY_MESSAGE_PERIOD
-    bernoulli_size = Constants.BERNOULLI_DIST_SIZE
-    bernoulli_p = Constants.BERNOULLI_DIST_P
     exponential_size = Constants.EXPONENTIAL_DIST_SIZE
     exponential_scale = Constants.EXPONENTIAL_DIST_SCALE
-
-    bernoulli = Bernoulli(bernoulli_size, bernoulli_p)
     exponential = Exponential(exponential_size, exponential_scale)
 
     end_devices = distribute(exponential)
-    super_group = generate(end_devices)
+    super_group = SuperGroupGenerator.generate(end_devices)
 
-    gateway = Gateway("GW1", end_devices)
+    for group in super_group:
+        total_thread_count = __calculate_total_thread_count(group)
+        barrier = threading.Barrier(total_thread_count)
 
-    message_transferable_eds = {x: x for x in range(0, len(end_devices))}
+        transmission_observers = UplinkTransmissionObserverGenerator.generate(group, barrier)
 
-    occurrence = 0
+        for transmission_observer in transmission_observers:
+            transmission_observer.start()
 
-    while (gateway_message_period / end_device_message_period) != occurrence:
-        logger.debug(" <run> occurrence: " + str(occurrence))
-        index_of_transmiters = __send_message(bernoulli)
-        __update_transmission_status(end_devices, index_of_transmiters)
-        occurrence += 1
-        sleep(end_device_message_period)
+        barrier.wait()
+
+        group_id_to_finalized_observers[getattr(group, '__id')] = transmission_observers
+
 
     __ack_all_devices_with_same_ack(message_transferred_eds)
     __ack_all_devices_with_different_ack_respect_to_sf(end_devices, message_transferred_eds)
@@ -64,32 +56,9 @@ def run():
     Results.NUMBER_OF_SUSPENDED_DEVICES = len(message_transferable_eds)
 
 
-def __send_message(distribution):
-    logger.info(" <send_message> ")
-    global message_transferable_eds
-    setattr(distribution, 'size', len(message_transferable_eds))
-    observation = distribution.sample()
-    transferrables = list(message_transferable_eds.values())
-    return [transferrables[x] for x in range(0, len(observation)) if observation[x] == 1]
-
-
-def __update_transmission_status(end_devices, transmitters_index):
-    logger.info(" <update_transmission_status> ")
-    global message_untransferable_eds
-    global message_transferred_eds
-    global message_transferable_eds
-
-    sf_to_index = __create_sf_to_index_dict(end_devices, transmitters_index)
-
-    for sf in sf_to_index:
-        if len(sf_to_index.get(sf)) > 1:
-            message_untransferable_eds.update({x: x for x in sf_to_index.get(sf)})
-        else:
-            message_transferred_eds.update({x: x for x in sf_to_index.get(sf)})
-
-    message_transferable_eds = {x: x for x in range(0, len(end_devices)) if message_untransferable_eds.get(x) is None
-                                and message_transferred_eds.get(x) is None}
-
+def __calculate_total_thread_count(group):
+    sf_to_end_devices = getattr(group, '__sf_to_end_devices')
+    return len(sf_to_end_devices) + 1
 
 def __ack_all_devices_with_same_ack(transmitters_index):
     logger.info("<ack_all_devices_with_same_ack> Boolean expressions are being created for acking each devices...")

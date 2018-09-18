@@ -3,15 +3,11 @@ import parameters.Results as Results
 from random import randrange
 
 
-def initialize(ed_n, ed_mp, gw_mp, mx_sf, mn_sf, gid_len):
+def initialize(ed_n, mx_sf, mn_sf, gid_len):
     Constants.END_DEVICE_NUMBER = ed_n
     Constants.MAX_SF = mx_sf
     Constants.MIN_SF = mn_sf
-    Constants.END_DEVICE_MESSAGE_PERIOD = ed_mp
-    Constants.GATEWAY_MESSAGE_PERIOD = gw_mp
     Constants.SFs = [sf for sf in range(Constants.MIN_SF, Constants.MAX_SF + 1)]
-    Constants.BERNOULLI_DIST_SIZE = Constants.END_DEVICE_NUMBER
-    Constants.BERNOULLI_DIST_P = float(randrange(1, 10)) / (float(Constants.END_DEVICE_NUMBER))
     Constants.EXPONENTIAL_DIST_SIZE = Constants.MAX_SF - Constants.MIN_SF + 1
     Constants.EXPONENTIAL_DIST_SCALE = 1
     Constants.GROUP_ID_LENGTH_IN_BIT = gid_len

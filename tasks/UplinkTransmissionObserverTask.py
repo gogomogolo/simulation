@@ -8,8 +8,8 @@ from util.ProcessUtil import calculate_time_slot_in_group_ul
 from distributions.Bernoulli import Bernoulli
 
 
-class DistributionObserverTask(threading.Thread):
-    def __init__(self, group_id, sf, end_devices, uplink_period_in_second):
+class UplinkTransmissionObserverTask(threading.Thread):
+    def __init__(self, group_id, sf, end_devices, uplink_period_in_second, barrier):
         self.__group_id = group_id
         self.__sf = sf
         self.__end_devices = end_devices.copy()
@@ -29,7 +29,8 @@ class DistributionObserverTask(threading.Thread):
             uplink_period_in_second,
             self.__message_period_in_seconds)
         self.__observable_end_devices_count = len(end_devices)
-        super(DistributionObserverTask, self).__init__(name="Thread-GroupID-{}".format(str(group_id)))
+        self.__barrier = barrier
+        super(UplinkTransmissionObserverTask, self).__init__(name="Thread-GroupID-{}".format(str(group_id)))
 
     def run(self):
         cycle = 0
@@ -40,6 +41,8 @@ class DistributionObserverTask(threading.Thread):
             cycle += 1
             self.__change_distribution(distribution)
             time.sleep(self.__message_period_in_seconds)
+
+        self.__barrier.wait()
 
     def __create_distribution(self):
         return Bernoulli(self.__observable_end_devices_count,
