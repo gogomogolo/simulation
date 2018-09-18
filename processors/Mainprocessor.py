@@ -9,6 +9,7 @@ from distributions.Bernoulli import Bernoulli
 from models.Gateway import Gateway
 from generators.EndDeviceDistributor import distribute
 from time import sleep
+from generators.SuperGroupGenerator import generate
 
 message_transferable_eds = {}
 message_transferred_eds = {}
@@ -40,6 +41,8 @@ def run():
     exponential = Exponential(exponential_size, exponential_scale)
 
     end_devices = distribute(exponential)
+    super_group = generate(end_devices)
+
     gateway = Gateway("GW1", end_devices)
 
     message_transferable_eds = {x: x for x in range(0, len(end_devices))}
@@ -48,20 +51,20 @@ def run():
 
     while (gateway_message_period / end_device_message_period) != occurrence:
         logger.debug(" <run> occurrence: " + str(occurrence))
-        index_of_transmiters = send_message(bernoulli)
-        update_transmission_status(end_devices, index_of_transmiters)
+        index_of_transmiters = __send_message(bernoulli)
+        __update_transmission_status(end_devices, index_of_transmiters)
         occurrence += 1
         sleep(end_device_message_period)
 
-    ack_all_devices_with_same_ack(message_transferred_eds)
-    ack_all_devices_with_different_ack_respect_to_sf(end_devices, message_transferred_eds)
+    __ack_all_devices_with_same_ack(message_transferred_eds)
+    __ack_all_devices_with_different_ack_respect_to_sf(end_devices, message_transferred_eds)
 
     Results.NUMBER_OF_FAILED_DEVICES = len(message_untransferable_eds)
     Results.NUMBER_OF_TRANSMITTERS = len(message_transferred_eds)
     Results.NUMBER_OF_SUSPENDED_DEVICES = len(message_transferable_eds)
 
 
-def send_message(distribution):
+def __send_message(distribution):
     logger.info(" <send_message> ")
     global message_transferable_eds
     setattr(distribution, 'size', len(message_transferable_eds))
@@ -70,13 +73,13 @@ def send_message(distribution):
     return [transferrables[x] for x in range(0, len(observation)) if observation[x] == 1]
 
 
-def update_transmission_status(end_devices, transmitters_index):
+def __update_transmission_status(end_devices, transmitters_index):
     logger.info(" <update_transmission_status> ")
     global message_untransferable_eds
     global message_transferred_eds
     global message_transferable_eds
 
-    sf_to_index = create_sf_to_index_dict(end_devices, transmitters_index)
+    sf_to_index = __create_sf_to_index_dict(end_devices, transmitters_index)
 
     for sf in sf_to_index:
         if len(sf_to_index.get(sf)) > 1:
@@ -88,7 +91,7 @@ def update_transmission_status(end_devices, transmitters_index):
                                 and message_transferred_eds.get(x) is None}
 
 
-def ack_all_devices_with_same_ack(transmitters_index):
+def __ack_all_devices_with_same_ack(transmitters_index):
     logger.info("<ack_all_devices_with_same_ack> Boolean expressions are being created for acking each devices...")
     qmc = QMC([key for key in transmitters_index])
     minimized_exp = qmc.minimize()
@@ -99,11 +102,11 @@ def ack_all_devices_with_same_ack(transmitters_index):
         Results.MAC_PAYLOAD_IN_BIT_SAME_ACK += len(minterm)*2
 
 
-def ack_all_devices_with_different_ack_respect_to_sf(end_devices, transmitters_index):
+def __ack_all_devices_with_different_ack_respect_to_sf(end_devices, transmitters_index):
     logger.info("<ack_all_devices_with_different_ack_respect_to_sf> "
                 "Boolean expressions are being created for acking each spreading factor type"
                 "end devices ...")
-    sf_to_index = create_sf_to_index_dict(end_devices, transmitters_index)
+    sf_to_index = __create_sf_to_index_dict(end_devices, transmitters_index)
 
     Results.SPREADING_FACTOR_BASED_NUMBER_OF_END_DEVICES = {key: len(sf_to_index[key]) for key in sf_to_index}
 
@@ -124,7 +127,7 @@ def ack_all_devices_with_different_ack_respect_to_sf(end_devices, transmitters_i
                 Results.MAC_PAYLOAD_IN_BIT_DIFFERENT_ACK[sf] += len(minterm)*2
 
 
-def create_sf_to_index_dict(end_devices, transmitters_index):
+def __create_sf_to_index_dict(end_devices, transmitters_index):
     sf_to_index = {}
 
     for index in transmitters_index:

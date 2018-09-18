@@ -26,8 +26,14 @@ def distribute(distribution):
 
     shuffle(end_devices)
 
+    change_ids(end_devices)
+
     return end_devices
 
 
-
+def change_ids(end_devices):
+    _id = 0
+    for end_device in end_devices:
+        setattr(end_device, '_id', bin(_id)[2:])
+        _id += 1
 

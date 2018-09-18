@@ -3,7 +3,7 @@ import parameters.Results as Results
 from random import randrange
 
 
-def initialize(ed_n, ed_mp, gw_mp, mx_sf, mn_sf):
+def initialize(ed_n, ed_mp, gw_mp, mx_sf, mn_sf, gid_len):
     Constants.END_DEVICE_NUMBER = ed_n
     Constants.MAX_SF = mx_sf
     Constants.MIN_SF = mn_sf
@@ -14,6 +14,7 @@ def initialize(ed_n, ed_mp, gw_mp, mx_sf, mn_sf):
     Constants.BERNOULLI_DIST_P = float(randrange(1, 10)) / (float(Constants.END_DEVICE_NUMBER))
     Constants.EXPONENTIAL_DIST_SIZE = Constants.MAX_SF - Constants.MIN_SF + 1
     Constants.EXPONENTIAL_DIST_SCALE = 1
+    Constants.GROUP_ID_LENGTH_IN_BIT = gid_len
 
     Results.BOOLEAN_EXP_FOR_SAME_ACK = ''
     Results.DEVICE_ID_LENGTH_IN_BIT_SAME_ACK = 0
