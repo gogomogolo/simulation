@@ -10,11 +10,11 @@ def calculate_preamble_symbol(np):
 
 
 def calculate_packet_symbol(sw, pl, sf, crc, ih, de, cr):
-    return sw + max(math.ceil((8 * pl - 4 * sf + 28 + 16 * crc - 20 * ih) / (4 * (sf - 2 * de))) * (cr + 4), 0)
+    return sw + max(math.ceil((8 * pl - 4 * sf + 28 + 16 * crc - 20 * ih) / float(4 * (sf - 2 * de))) * (cr + 4), 0)
 
 
 def calculate_time_on_air(bw_in_hz, np, sw, pl, sf, crc, ih, de, cr):
-    return calculate_symbol_duration(sf, bw_in_hz) * (calculate_preamble_symbol(np) *
+    return calculate_symbol_duration(sf, bw_in_hz) * (calculate_preamble_symbol(np) +
                                                       calculate_packet_symbol(sw, pl, sf, crc, ih, de, cr))
 
 

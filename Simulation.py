@@ -2,7 +2,7 @@ from processors.Preprocessor import initialize
 from processors.Mainprocessor import run
 from processors.Postprocessor import print_results
 
-END_DEVICE_NUMBER = 1000
+END_DEVICE_NUMBER = 100000
 
 MIN_SF = 7
 MAX_SF = 12
@@ -10,8 +10,8 @@ MAX_SF = 12
 EXPONENTIAL_DIST_SIZE = MAX_SF - MIN_SF + 1
 EXPONENTIAL_DIST_SCALE = 1
 
-SUPER_GROUP_LENGTH_IN_SECONDS = 15
-GROUP_ID_LENGTH_IN_BIT = 8
+SUPER_GROUP_LENGTH_IN_SECONDS = 100
+GROUP_ID_LENGTH_IN_BIT = 6
 DEVICE_ADDRESS_LENGTH_IN_BIT = 32
 SUBSCRIPTION_ID_LENGTH_IN_BIT = 24
 
@@ -30,7 +30,8 @@ IH = 0
 DE = 0
 CODING_RATE = 1
 
-initialize(END_DEVICE_NUMBER
+initialize(
+    END_DEVICE_NUMBER
     ,MIN_SF
     ,MAX_SF
     ,SUPER_GROUP_LENGTH_IN_SECONDS

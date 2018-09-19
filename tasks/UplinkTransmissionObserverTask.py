@@ -38,20 +38,20 @@ class UplinkTransmissionObserverTask(threading.Thread):
             distribution = self.__create_distribution()
 
             while cycle < self.__time_slot_number:
+                self.__change_distribution(distribution)
                 self.__observe_transmission_of_end_devices(distribution)
                 cycle += 1
-                self.__change_distribution(distribution)
                 time.sleep(self.__message_period_in_seconds)
         finally:
             self.__barrier.wait()
 
     def __create_distribution(self):
         return Bernoulli(self.__observable_end_devices_count,
-                         float(randrange(1, 10)) / float(self.__observable_end_devices_count))
+                         float(1) / float(self.__observable_end_devices_count))
 
     def __change_distribution(self, distribution):
-        setattr(distribution, 'size', self.__observable_end_devices_count)
-        setattr(distribution, 'p', float(randrange(1, 10)) / float(self.__observable_end_devices_count))
+        setattr(distribution, 'size', int(self.__observable_end_devices_count))
+        setattr(distribution, 'p', float(1) / float(self.__observable_end_devices_count))
 
     def __observe_transmission_of_end_devices(self, distribution):
         transmissions = list(distribution.sample())

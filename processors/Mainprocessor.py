@@ -60,8 +60,11 @@ def __create_acknowledgement_for_group(groupid_to_observers):
     groupid_to_acknowledgement = {}
 
     for group_id in groupid_to_observers:
-        successful_transmitters = getattr(groupid_to_observers[group_id],
-                                          '_UplinkTransmissionObserverTask__end_devices_success_transmission')
+        observers = groupid_to_observers[group_id]
+        successful_transmitters = []
+        for observer in observers:
+            successful_transmitters += getattr(observer,
+                                               '_UplinkTransmissionObserverTask__end_devices_success_transmission')
         end_device_ids = \
             [int(getattr(end_device, '_id')[:(len(getattr(end_device, '_id'))-len(group_id))], base=2)
              for end_device in successful_transmitters]
@@ -77,8 +80,8 @@ def __create_acknowledgement_for_group_in_detail_of_sf(groupid_to_observers):
     for group_id in groupid_to_observers:
         observers = groupid_to_observers[group_id]
         sf_to_end_devices = \
-            {getattr(observer, '__sf'): getattr(observer,
-                                                '_UplinkTransmissionObserverTask__end_devices_success_transmission')
+            {getattr(observer, '_UplinkTransmissionObserverTask__sf'):
+                getattr(observer, '_UplinkTransmissionObserverTask__end_devices_success_transmission')
              for observer in observers}
         sf_to_acknowledgement = {}
         for sf in sf_to_end_devices:

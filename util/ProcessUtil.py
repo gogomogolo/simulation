@@ -14,4 +14,4 @@ def calculate_link_period_in_seconds(group_period_in_seconds, space_percentage):
 
 
 def calculate_time_slot_in_group_ul(group_ul_period_in_seconds, sf_message_period_in_seconds):
-    return group_ul_period_in_seconds / sf_message_period_in_seconds
+    return int(group_ul_period_in_seconds / sf_message_period_in_seconds)
