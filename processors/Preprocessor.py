@@ -3,14 +3,52 @@ import parameters.Results as Results
 from random import randrange
 
 
-def initialize(ed_n, mx_sf, mn_sf, gid_len):
-    Constants.END_DEVICE_NUMBER = ed_n
-    Constants.MAX_SF = mx_sf
-    Constants.MIN_SF = mn_sf
+def initialize(
+    END_DEVICE_NUMBER
+    ,MIN_SF
+    ,MAX_SF
+    ,SUPER_GROUP_LENGTH_IN_SECONDS
+    ,GROUP_ID_LENGTH_IN_BIT
+    ,DEVICE_ADDRESS_LENGTH_IN_BIT
+    ,SUBSCRIPTION_ID_LENGTH_IN_BIT
+    ,GROUP_UPLINK_PERIOD_PERCENTAGE
+    ,GROUP_MIDLINK_PERIOD_PERCENTAGE
+    ,GROUP_DOWNLINK_PERIOD_PERCENTAGE
+    ,BANDWIDTH_IN_HERTZ
+    ,NUMBER_OF_PREAMBLE
+    ,SYNCHRONIZATION_WORD
+    ,SF_TO_MAC_PAYLOAD_IN_BYTE
+    ,CRC
+    ,IH
+    ,DE
+    ,CODING_RATE
+):
+    Constants.END_DEVICE_NUMBER = END_DEVICE_NUMBER
+    Constants.MIN_SF = MIN_SF
+    Constants.MAX_SF = MAX_SF
     Constants.SFs = [sf for sf in range(Constants.MIN_SF, Constants.MAX_SF + 1)]
     Constants.EXPONENTIAL_DIST_SIZE = Constants.MAX_SF - Constants.MIN_SF + 1
     Constants.EXPONENTIAL_DIST_SCALE = 1
-    Constants.GROUP_ID_LENGTH_IN_BIT = gid_len
+
+    Constants.SUPER_GROUP_LENGTH_IN_SECONDS = SUPER_GROUP_LENGTH_IN_SECONDS
+    Constants.GROUP_ID_LENGTH_IN_BIT = GROUP_ID_LENGTH_IN_BIT
+    Constants.DEVICE_ADDRESS_LENGTH_IN_BIT = DEVICE_ADDRESS_LENGTH_IN_BIT
+    Constants.SUBSCRIPTION_ID_LENGTH_IN_BIT = SUBSCRIPTION_ID_LENGTH_IN_BIT
+
+    # their sum should be equal to 1.
+    Constants.GROUP_UPLINK_PERIOD_PERCENTAGE = GROUP_UPLINK_PERIOD_PERCENTAGE
+    Constants.GROUP_MIDLINK_PERIOD_PERCENTAGE = GROUP_MIDLINK_PERIOD_PERCENTAGE
+    Constants.GROUP_DOWNLINK_PERIOD_PERCENTAGE = GROUP_DOWNLINK_PERIOD_PERCENTAGE
+
+    # they are for calculation of the time on air
+    Constants.BANDWIDTH_IN_HERTZ = BANDWIDTH_IN_HERTZ
+    Constants.NUMBER_OF_PREAMBLE = NUMBER_OF_PREAMBLE
+    Constants.SYNCHRONIZATION_WORD = SYNCHRONIZATION_WORD
+    Constants.SF_TO_MAC_PAYLOAD_IN_BYTE = SF_TO_MAC_PAYLOAD_IN_BYTE
+    Constants.CRC = CRC
+    Constants.IH = IH
+    Constants.DE = DE
+    Constants.CODING_RATE = CODING_RATE
 
     Results.BOOLEAN_EXP_FOR_SAME_ACK = ''
     Results.DEVICE_ID_LENGTH_IN_BIT_SAME_ACK = 0

@@ -10,9 +10,6 @@ from minimizers.QMC import QMC
 from distributions.Exponential import Exponential
 from generators.EndDeviceDistributor import distribute
 
-message_transferable_eds = {}
-message_transferred_eds = {}
-message_untransferable_eds = {}
 
 formatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
                               datefmt='%Y-%m-%d %H:%M:%S')
@@ -25,7 +22,6 @@ logger.setLevel(logging.DEBUG)
 
 def run():
     logger.info("<run> Simulation is starting...")
-    group_id_to_finalized_observers = {}
 
     exponential_size = Constants.EXPONENTIAL_DIST_SIZE
     exponential_scale = Constants.EXPONENTIAL_DIST_SCALE
@@ -33,6 +29,16 @@ def run():
 
     end_devices = distribute(exponential)
     super_group = SuperGroupGenerator.generate(end_devices)
+
+    group_id_to_finalized_observers = __play_aggregated_acknowledge_scenario(super_group)
+    group_id_to_acknowledgement = __create_acknowledgement_for_group(group_id_to_finalized_observers)
+    group_id_to_sf_acknowledgement = __create_acknowledgement_for_group_in_detail_of_sf(group_id_to_finalized_observers)
+    Results.GROUP_ID_TO_ACKNOWLEDGEMENT = group_id_to_acknowledgement
+    Results.GROUP_ID_TO_SF_ACKNOWLEDGEMENT = group_id_to_sf_acknowledgement
+
+
+def __play_aggregated_acknowledge_scenario(super_group):
+    group_id_to_finalized_observers = {}
 
     for group in super_group:
         total_thread_count = __calculate_total_thread_count(group)
@@ -47,65 +53,45 @@ def run():
 
         group_id_to_finalized_observers[getattr(group, '__id')] = transmission_observers
 
+    return group_id_to_finalized_observers
 
-    __ack_all_devices_with_same_ack(message_transferred_eds)
-    __ack_all_devices_with_different_ack_respect_to_sf(end_devices, message_transferred_eds)
 
-    Results.NUMBER_OF_FAILED_DEVICES = len(message_untransferable_eds)
-    Results.NUMBER_OF_TRANSMITTERS = len(message_transferred_eds)
-    Results.NUMBER_OF_SUSPENDED_DEVICES = len(message_transferable_eds)
+def __create_acknowledgement_for_group(groupid_to_observers):
+    groupid_to_acknowledgement = {}
+
+    for group_id in groupid_to_observers:
+        successful_transmitters = getattr(groupid_to_observers[group_id], '__end_devices_success_transmission')
+        end_device_ids = \
+            [int(getattr(end_device, '_id')[:(len(getattr(end_device, '_id'))-len(group_id))], base=2)
+             for end_device in successful_transmitters]
+        qmc = QMC(end_device_ids)
+        groupid_to_acknowledgement[group_id] = qmc.minimize()
+
+    return groupid_to_acknowledgement
+
+
+def __create_acknowledgement_for_group_in_detail_of_sf(groupid_to_observers):
+    groupid_to_sf_acknowledgement = {}
+
+    for group_id in groupid_to_observers:
+        observers = groupid_to_observers[group_id]
+        sf_to_end_devices = \
+            {getattr(observer, '__sf'): getattr(observer, '__end_devices_success_transmission')
+             for observer in observers}
+        sf_to_acknowledgement = {}
+        for sf in sf_to_end_devices:
+            end_device_ids = \
+                [int(getattr(end_device, '_id')[:(len(getattr(end_device, '_id'))-len(group_id))], base=2)
+                 for end_device in sf_to_end_devices[sf]]
+            qmc = QMC(end_device_ids)
+            sf_to_acknowledgement[sf] = qmc.minimize()
+
+        groupid_to_sf_acknowledgement[group_id] = sf_to_acknowledgement
+
+    return groupid_to_sf_acknowledgement
 
 
 def __calculate_total_thread_count(group):
     sf_to_end_devices = getattr(group, '__sf_to_end_devices')
     return len(sf_to_end_devices) + 1
 
-def __ack_all_devices_with_same_ack(transmitters_index):
-    logger.info("<ack_all_devices_with_same_ack> Boolean expressions are being created for acking each devices...")
-    qmc = QMC([key for key in transmitters_index])
-    minimized_exp = qmc.minimize()
-
-    for minterm in minimized_exp:
-        Results.BOOLEAN_EXP_FOR_SAME_ACK += minterm
-        Results.DEVICE_ID_LENGTH_IN_BIT_SAME_ACK = len(minterm)
-        Results.MAC_PAYLOAD_IN_BIT_SAME_ACK += len(minterm)*2
-
-
-def __ack_all_devices_with_different_ack_respect_to_sf(end_devices, transmitters_index):
-    logger.info("<ack_all_devices_with_different_ack_respect_to_sf> "
-                "Boolean expressions are being created for acking each spreading factor type"
-                "end devices ...")
-    sf_to_index = __create_sf_to_index_dict(end_devices, transmitters_index)
-
-    Results.SPREADING_FACTOR_BASED_NUMBER_OF_END_DEVICES = {key: len(sf_to_index[key]) for key in sf_to_index}
-
-    sf_to_exp = {}
-
-    for sf in sf_to_index:
-        qmc = QMC(sf_to_index[sf])
-        sf_to_exp[sf] = qmc.minimize()
-
-    for sf in sf_to_exp:
-        for minterm in sf_to_exp[sf]:
-            if Results.BOOLEAN_EXP_FOR_DIFFERENT_ACK.get(sf) is None:
-                Results.BOOLEAN_EXP_FOR_DIFFERENT_ACK[sf] = minterm
-                Results.DEVICE_ID_LENGTH_IN_BIT_DIFFERENT_ACK[sf] = len(minterm)
-                Results.MAC_PAYLOAD_IN_BIT_DIFFERENT_ACK[sf] = len(minterm)*2
-            else:
-                Results.BOOLEAN_EXP_FOR_DIFFERENT_ACK[sf] += minterm
-                Results.MAC_PAYLOAD_IN_BIT_DIFFERENT_ACK[sf] += len(minterm)*2
-
-
-def __create_sf_to_index_dict(end_devices, transmitters_index):
-    sf_to_index = {}
-
-    for index in transmitters_index:
-        ed = end_devices[index]
-        sf_of_ed = getattr(ed, "_sf")
-
-        if sf_to_index.get(sf_of_ed) is None:
-            sf_to_index[sf_of_ed] = [index]
-        else:
-            sf_to_index[sf_of_ed].append(index)
-
-    return sf_to_index
