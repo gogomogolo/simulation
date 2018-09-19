@@ -1,4 +1,5 @@
 import parameters.Constants as Constants
+import math
 
 from contracts.Distribution import Distribution
 from models.EndDevice import EndDevice
@@ -33,7 +34,9 @@ def distribute(distribution):
 
 def change_ids(end_devices):
     _id = 0
+    _id_length = math.ceil(math.log(Constants.END_DEVICE_NUMBER, 2))
+    _id_bit_notation = '0'+str(_id_length)+'b'
     for end_device in end_devices:
-        setattr(end_device, '_id', bin(_id)[2:])
+        setattr(end_device, '_id', format(_id, _id_bit_notation))
         _id += 1
 

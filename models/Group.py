@@ -13,15 +13,18 @@ class Group(object):
     def configure_link_periods(self, period_in_seconds, link_period_percentage):
         self.__configure_uplink_period(
             calculate_link_period_in_seconds(period_in_seconds,
-                                             getattr(link_period_percentage, '__uplink_period_percentage'))
+                                             getattr(link_period_percentage,
+                                                     '_GroupLinkPeriodPercentage__uplink_period_percentage'))
         )
         self.__configure_midlink_period(
             calculate_link_period_in_seconds(period_in_seconds,
-                                             getattr(link_period_percentage, '__midlink_period_percentage'))
+                                             getattr(link_period_percentage,
+                                                     '_GroupLinkPeriodPercentage__midlink_period_percentage'))
         )
         self.__configure_downlink_period(
             calculate_link_period_in_seconds(period_in_seconds,
-                                             getattr(link_period_percentage, '__downlink_period_percentage'))
+                                             getattr(link_period_percentage,
+                                                     '_GroupLinkPeriodPercentage__downlink_period_percentage'))
         )
 
     def organize_end_devices_by_sf(self):

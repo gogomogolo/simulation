@@ -3,9 +3,9 @@ from tasks.UplinkTransmissionObserverTask import UplinkTransmissionObserverTask
 
 def generate(group, barrier):
     observer_tasks = []
-    group_id = getattr(group, '__id')
-    sf_to_end_devices = getattr(group, '__sf_to_end_devices')
-    uplink_period_in_seconds = getattr(group, '__uplink_period_in_seconds')
+    group_id = getattr(group, '_Group__id')
+    sf_to_end_devices = getattr(group, '_Group__sf_to_end_devices')
+    uplink_period_in_seconds = getattr(group, '_Group__uplink_period_in_seconds')
 
     for sf in sf_to_end_devices:
         observer_tasks.append(

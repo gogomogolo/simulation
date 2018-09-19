@@ -33,16 +33,17 @@ class UplinkTransmissionObserverTask(threading.Thread):
         super(UplinkTransmissionObserverTask, self).__init__(name="Thread-GroupID-{}".format(str(group_id)))
 
     def run(self):
-        cycle = 0
-        distribution = self.__create_distribution()
+        try:
+            cycle = 0
+            distribution = self.__create_distribution()
 
-        while cycle < self.__time_slot_number:
-            self.__observe_transmission_of_end_devices(distribution)
-            cycle += 1
-            self.__change_distribution(distribution)
-            time.sleep(self.__message_period_in_seconds)
-
-        self.__barrier.wait()
+            while cycle < self.__time_slot_number:
+                self.__observe_transmission_of_end_devices(distribution)
+                cycle += 1
+                self.__change_distribution(distribution)
+                time.sleep(self.__message_period_in_seconds)
+        finally:
+            self.__barrier.wait()
 
     def __create_distribution(self):
         return Bernoulli(self.__observable_end_devices_count,
@@ -53,7 +54,7 @@ class UplinkTransmissionObserverTask(threading.Thread):
         setattr(distribution, 'p', float(randrange(1, 10)) / float(self.__observable_end_devices_count))
 
     def __observe_transmission_of_end_devices(self, distribution):
-        transmissions = distribution.sample()
+        transmissions = list(distribution.sample())
         if self.__are_valid_transmissions(transmissions):
             self.__update_end_device_container(transmissions, self.__end_devices_success_transmission)
         else:
