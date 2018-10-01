@@ -16,4 +16,5 @@ class LifecycleGroup(object):
         end_device_ids = \
             [int(getattr(end_device, '_id')[:(len(getattr(end_device, '_id')) - len(group_id))], base=2)
              for end_device in successful_transmitters]
-        return QMC(end_device_ids)
+        qmc = QMC(end_device_ids)
+        return qmc.minimize()

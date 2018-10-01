@@ -23,5 +23,5 @@ def calculate_super_group_period(sf_message_period_in_seconds):
 
 
 def calculate_super_group_lifecycle(super_group_period_in_seconds):
-    return Constants.SIMULATION_LIFE_TIME_IN_SECONDS / super_group_period_in_seconds
+    return int(Constants.SIMULATION_LIFE_TIME_IN_SECONDS / super_group_period_in_seconds)
 

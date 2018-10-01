@@ -15,7 +15,7 @@ class GroupUplinkTransmissionObserver(object):
         cycle = 0
         distribution = self.__create_distribution()
 
-        while cycle < self.__time_slot_number:
+        while self.__is_valid_observation(cycle):
             self.__change_distribution(distribution)
             self.__observe_transmission_of_end_devices(distribution)
             cycle += 1
@@ -34,6 +34,9 @@ class GroupUplinkTransmissionObserver(object):
             self.__update_end_device_container(transmissions, self.__end_devices_success_transmission)
         else:
             self.__update_end_device_container(transmissions, self.__end_devices_fail_transmission)
+
+    def __is_valid_observation(self, cycle):
+        return cycle < self.__time_slot_number and self.__observable_end_devices_count > 0
 
     def __are_valid_transmissions(self, transmissions):
         return sum(transmissions) <= 1
