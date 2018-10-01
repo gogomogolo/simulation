@@ -1,49 +1,24 @@
-import threading
-import parameters.Constants as Constants
-import time
-from random import randrange
-
-from util.LorawanUtil import calculate_time_on_air
-from util.ProcessUtil import calculate_time_slot_in_group_ul
 from distributions.Bernoulli import Bernoulli
 
 
-class UplinkTransmissionObserverTask(threading.Thread):
-    def __init__(self, group_id, sf, end_devices, uplink_period_in_second, barrier):
+class GroupUplinkTransmissionObserver(object):
+    def __init__(self, group_id, sf, end_devices, time_slot_number):
         self.__group_id = group_id
         self.__sf = sf
         self.__end_devices = end_devices.copy()
         self.__end_devices_success_transmission = []
         self.__end_devices_fail_transmission = []
-        self.__message_period_in_seconds = calculate_time_on_air(
-            Constants.BANDWIDTH_IN_HERTZ,
-            Constants.NUMBER_OF_PREAMBLE,
-            Constants.SYNCHRONIZATION_WORD,
-            Constants.SF_TO_MAC_PAYLOAD_IN_BYTE[sf],
-            sf,
-            Constants.CRC,
-            Constants.IH,
-            Constants.DE,
-            Constants.CODING_RATE)
-        self.__time_slot_number = calculate_time_slot_in_group_ul(
-            uplink_period_in_second,
-            self.__message_period_in_seconds)
         self.__observable_end_devices_count = len(end_devices)
-        self.__barrier = barrier
-        super(UplinkTransmissionObserverTask, self).__init__(name="Thread-GroupID-{}".format(str(group_id)))
+        self.__time_slot_number = time_slot_number
 
-    def run(self):
-        try:
-            cycle = 0
-            distribution = self.__create_distribution()
+    def observe(self):
+        cycle = 0
+        distribution = self.__create_distribution()
 
-            while cycle < self.__time_slot_number:
-                self.__change_distribution(distribution)
-                self.__observe_transmission_of_end_devices(distribution)
-                cycle += 1
-                time.sleep(self.__message_period_in_seconds)
-        finally:
-            self.__barrier.wait()
+        while cycle < self.__time_slot_number:
+            self.__change_distribution(distribution)
+            self.__observe_transmission_of_end_devices(distribution)
+            cycle += 1
 
     def __create_distribution(self):
         return Bernoulli(self.__observable_end_devices_count,

@@ -1,28 +1,56 @@
 import parameters.Constants as Constants
+import util.LorawanUtil as LorawanUtil
+import util.ProcessUtil as ProcessUtil
+
 from models.Group import Group
-from util.ProcessUtil import calculate_group_in_super_group, calculate_group_period_in_seconds
-from models.GroupLinkPeriodPercentage import GroupLinkPeriodPercentage
+from models.SuperGroup import SuperGroup
 
 
 def generate(end_devices):
-    if __is_valid_group_count(calculate_group_in_super_group(), len(end_devices)):
-        return []
+    sf_to_end_devices = __create_sf_to_end_devices(end_devices)
 
-    groupid_to_end_devices = __create_group_id_to_end_devices_dictionary(end_devices)
-
-    return __create_super_group(groupid_to_end_devices)
+    return __create_super_groups(sf_to_end_devices)
 
 
-def __is_valid_group_count(group_number, end_device_number):
-    return group_number >= end_device_number
+def __create_super_groups(sf_to_end_devices):
+    super_groups = []
+
+    for sf in sf_to_end_devices:
+        time_on_air = __get_time_on_air(sf)
+        group_period_in_seconds = ProcessUtil.calculate_group_period_in_seconds(time_on_air)
+        super_group_period_in_seconds = ProcessUtil.calculate_super_group_period(time_on_air)
+        group_number_in_super_group = ProcessUtil.calculate_group_number_in_super_group(super_group_period_in_seconds, group_period_in_seconds)
+        group_id_length_in_bits = ProcessUtil.calculate_group_id_length_in_bits(group_number_in_super_group)
+        time_slot_in_upper_link = ProcessUtil.calculate_time_slot_in_group_ul(time_on_air)
+
+        group_id_to_end_devices = __create_group_id_to_end_devices_dictionary(sf_to_end_devices[sf], group_id_length_in_bits)
+        super_group = __create_super_group(group_id_to_end_devices, sf, time_on_air,
+                                           time_slot_in_upper_link, group_period_in_seconds)
+
+        super_groups.append(SuperGroup(sf, super_group, super_group_period_in_seconds, group_number_in_super_group))
+
+    return super_groups
 
 
-def __create_group_id_to_end_devices_dictionary(end_devices):
+def __create_sf_to_end_devices(end_devices):
+    sf_to_end_devices = {}
+
+    for end_device in end_devices:
+        sf = getattr(end_device, "_sf")
+        if sf_to_end_devices.get(sf) is None:
+            sf_to_end_devices[sf] = [end_device]
+        else:
+            sf_to_end_devices[sf].append(end_device)
+
+    return sf_to_end_devices
+
+
+def __create_group_id_to_end_devices_dictionary(end_devices, group_id_length_in_bits):
     groupid_to_end_devices = {}
 
     for end_device in end_devices:
         end_device_id = getattr(end_device, '_id')
-        group_id = end_device_id[::-1][:Constants.GROUP_ID_LENGTH_IN_BIT][::-1]
+        group_id = end_device_id[::-1][:group_id_length_in_bits][::-1]
         if groupid_to_end_devices.get(group_id) is None:
             groupid_to_end_devices[group_id] = [end_device]
         else:
@@ -31,22 +59,25 @@ def __create_group_id_to_end_devices_dictionary(end_devices):
     return groupid_to_end_devices
 
 
-def __create_super_group(groupid_to_end_devices):
+def __create_super_group(group_id_to_end_devices, sf, time_on_air, time_slot_in_upper_link, group_period_in_seconds):
     super_group = []
-    group_period = calculate_group_period_in_seconds()
 
-    for group_id in groupid_to_end_devices:
-        group = Group(group_id, groupid_to_end_devices[group_id])
-        group.configure_link_periods(
-            group_period,
-            GroupLinkPeriodPercentage(
-                Constants.GROUP_UPLINK_PERIOD_PERCENTAGE,
-                Constants.GROUP_MIDLINK_PERIOD_PERCENTAGE,
-                Constants.GROUP_DOWNLINK_PERIOD_PERCENTAGE
-            )
-        )
-        group.organize_end_devices_by_sf()
-
+    for group_id in group_id_to_end_devices:
+        group = Group(group_id, sf, group_id_to_end_devices[group_id],
+                      time_on_air, time_slot_in_upper_link, group_period_in_seconds)
         super_group.append(group)
 
     return super_group
+
+
+def __get_time_on_air(sf):
+    return LorawanUtil.calculate_time_on_air(
+            Constants.BANDWIDTH_IN_HERTZ,
+            Constants.NUMBER_OF_PREAMBLE,
+            Constants.SYNCHRONIZATION_WORD,
+            Constants.SF_TO_MAC_PAYLOAD_IN_BYTE[sf],
+            sf,
+            Constants.CRC,
+            Constants.IH,
+            Constants.DE,
+            Constants.CODING_RATE)

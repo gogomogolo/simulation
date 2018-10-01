@@ -1,9 +1,7 @@
 import parameters.Constants as Constants
-import math
 
 from contracts.Distribution import Distribution
 from models.EndDevice import EndDevice
-from random import shuffle
 from util.ListUtil import spread
 
 
@@ -25,18 +23,6 @@ def distribute(distribution):
                     end_devices.append(EndDevice(bin(device_id+j)[2:], Constants.SFs[i]))
                 device_id += end_device_distribution[i]
 
-    shuffle(end_devices)
-
-    change_ids(end_devices)
-
     return end_devices
 
-
-def change_ids(end_devices):
-    _id = 0
-    _id_length = math.ceil(math.log(Constants.END_DEVICE_NUMBER, 2))
-    _id_bit_notation = '0'+str(_id_length)+'b'
-    for end_device in end_devices:
-        setattr(end_device, '_id', format(_id, _id_bit_notation))
-        _id += 1
 

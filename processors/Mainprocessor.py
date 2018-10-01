@@ -1,14 +1,13 @@
 import parameters.Constants as Constants
-import parameters.Results as Results
 import logging
 import sys
-import generators.UplinkTransmissionObserverGenerator as UplinkTransmissionObserverGenerator
+import generators.SuperGroupObserverGenerator as SuperGroupObserverGenerator
 import generators.SuperGroupGenerator as SuperGroupGenerator
+import generators.EndDeviceDistributor as EndDeviceDistributor
+import generators.SimulationResultGenerator as SimulationResultGenerator
 import threading
 
-from minimizers.QMC import QMC
 from distributions.Exponential import Exponential
-from generators.EndDeviceDistributor import distribute
 
 
 formatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
@@ -27,76 +26,34 @@ def run():
     exponential_scale = Constants.EXPONENTIAL_DIST_SCALE
     exponential = Exponential(exponential_size, exponential_scale)
 
-    end_devices = distribute(exponential)
-    super_group = SuperGroupGenerator.generate(end_devices)
+    end_devices = EndDeviceDistributor.distribute(exponential)
+    super_groups = SuperGroupGenerator.generate(end_devices)
 
-    group_id_to_finalized_observers = __play_aggregated_acknowledge_scenario(super_group)
-    group_id_to_acknowledgement = __create_acknowledgement_for_group(group_id_to_finalized_observers)
-    group_id_to_sf_acknowledgement = __create_acknowledgement_for_group_in_detail_of_sf(group_id_to_finalized_observers)
-    Results.GROUP_ID_TO_ACKNOWLEDGEMENT = group_id_to_acknowledgement
-    Results.GROUP_ID_TO_SF_ACKNOWLEDGEMENT = group_id_to_sf_acknowledgement
+    super_group_observers = __play_aggregated_acknowledge_scenario(super_groups)
+    simulation_result = __create_simulation_result(super_group_observers)
 
-
-def __play_aggregated_acknowledge_scenario(super_group):
-    group_id_to_finalized_observers = {}
-
-    for group in super_group:
-        total_thread_count = __calculate_total_thread_count(group)
-        barrier = threading.Barrier(total_thread_count)
-
-        transmission_observers = UplinkTransmissionObserverGenerator.generate(group, barrier)
-
-        for transmission_observer in transmission_observers:
-            transmission_observer.start()
-
-        barrier.wait()
-
-        group_id_to_finalized_observers[getattr(group, '_Group__id')] = transmission_observers
-
-    return group_id_to_finalized_observers
+    logger.info("<run> Simulation is ending...")
 
 
-def __create_acknowledgement_for_group(groupid_to_observers):
-    groupid_to_acknowledgement = {}
+def __play_aggregated_acknowledge_scenario(super_groups):
+    total_thread_count = __calculate_total_thread_count(super_groups)
+    barrier = threading.Barrier(total_thread_count)
 
-    for group_id in groupid_to_observers:
-        observers = groupid_to_observers[group_id]
-        successful_transmitters = []
-        for observer in observers:
-            successful_transmitters += getattr(observer,
-                                               '_UplinkTransmissionObserverTask__end_devices_success_transmission')
-        end_device_ids = \
-            [int(getattr(end_device, '_id')[:(len(getattr(end_device, '_id'))-len(group_id))], base=2)
-             for end_device in successful_transmitters]
-        qmc = QMC(end_device_ids)
-        groupid_to_acknowledgement[group_id] = qmc.minimize()
+    super_group_observers = \
+        [SuperGroupObserverGenerator.generate(super_group, barrier) for super_group in super_groups]
 
-    return groupid_to_acknowledgement
+    for super_group_observer in super_group_observers:
+        super_group_observer.start()
+
+    barrier.wait()
+
+    return super_group_observers
 
 
-def __create_acknowledgement_for_group_in_detail_of_sf(groupid_to_observers):
-    groupid_to_sf_acknowledgement = {}
-
-    for group_id in groupid_to_observers:
-        observers = groupid_to_observers[group_id]
-        sf_to_end_devices = \
-            {getattr(observer, '_UplinkTransmissionObserverTask__sf'):
-                getattr(observer, '_UplinkTransmissionObserverTask__end_devices_success_transmission')
-             for observer in observers}
-        sf_to_acknowledgement = {}
-        for sf in sf_to_end_devices:
-            end_device_ids = \
-                [int(getattr(end_device, '_id')[:(len(getattr(end_device, '_id'))-len(group_id))], base=2)
-                 for end_device in sf_to_end_devices[sf]]
-            qmc = QMC(end_device_ids)
-            sf_to_acknowledgement[sf] = qmc.minimize()
-
-        groupid_to_sf_acknowledgement[group_id] = sf_to_acknowledgement
-
-    return groupid_to_sf_acknowledgement
+def __create_simulation_result(super_group_observers):
+    return SimulationResultGenerator.generate(super_group_observers)
 
 
-def __calculate_total_thread_count(group):
-    sf_to_end_devices = getattr(group, '_Group__sf_to_end_devices')
-    return len(sf_to_end_devices) + 1
+def __calculate_total_thread_count(super_groups):
+    return len(super_groups) + 1
 
