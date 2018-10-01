@@ -13,22 +13,12 @@ class GroupUplinkTransmissionObserver(object):
 
     def observe(self):
         cycle = 0
-        distribution = self.__create_distribution()
-
         while self.__is_valid_observation(cycle):
-            self.__change_distribution(distribution)
-            self.__observe_transmission_of_end_devices(distribution)
+            self.__observe_transmission_of_end_devices()
             cycle += 1
 
-    def __create_distribution(self):
-        return Bernoulli(self.__observable_end_devices_count,
-                         float(1) / float(self.__observable_end_devices_count))
-
-    def __change_distribution(self, distribution):
-        setattr(distribution, 'size', int(self.__observable_end_devices_count))
-        setattr(distribution, 'p', float(1) / float(self.__observable_end_devices_count))
-
-    def __observe_transmission_of_end_devices(self, distribution):
+    def __observe_transmission_of_end_devices(self):
+        distribution = Bernoulli(self.__observable_end_devices_count, (float(1) / float(self.__observable_end_devices_count)))
         transmissions = list(distribution.sample())
         if self.__are_valid_transmissions(transmissions):
             self.__update_end_device_container(transmissions, self.__end_devices_success_transmission)

@@ -1,7 +1,7 @@
 from processors.Preprocessor import initialize
 from processors.Mainprocessor import run
 
-END_DEVICE_NUMBER = 25000
+END_DEVICE_NUMBER = 100000
 
 MIN_SF = 7
 MAX_SF = 12
@@ -25,7 +25,7 @@ CODING_RATE = 1
 
 DUTY_CYCLE_IN_PERCENTAGE = 1
 
-SIMULATION_LIFE_TIME_IN_SECONDS = 700
+SIMULATION_LIFE_TIME_IN_SECONDS = 3600
 
 initialize(
     END_DEVICE_NUMBER

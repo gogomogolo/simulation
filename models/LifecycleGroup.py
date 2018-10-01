@@ -13,8 +13,9 @@ class LifecycleGroup(object):
         }
 
     def __create_acknowledgements(self, successful_transmitters, group_id):
-        end_device_ids = \
-            [int(getattr(end_device, '_id')[:(len(getattr(end_device, '_id')) - len(group_id))], base=2)
-             for end_device in successful_transmitters]
+        end_device_ids = []
+        for end_device in successful_transmitters:
+            end_device_ids.append(int(getattr(end_device, '_id')[:(len(getattr(end_device, '_id')) - len(group_id))], base=2))
+
         qmc = QMC(end_device_ids)
         return qmc.minimize()
