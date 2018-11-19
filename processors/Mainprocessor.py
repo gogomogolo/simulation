@@ -1,4 +1,5 @@
 import parameters.Constants as Constants
+import parameters.Results as Results
 import logging
 import sys
 import generators.SuperGroupObserverGenerator as SuperGroupObserverGenerator
@@ -30,7 +31,7 @@ def run():
     super_groups = SuperGroupGenerator.generate(end_devices)
 
     super_group_observers = __play_aggregated_acknowledge_scenario(super_groups)
-    simulation_result = __create_simulation_result(super_group_observers)
+    Results.SIMULATION_RESULT = __create_simulation_result(super_group_observers)
 
     logger.info("<run> Simulation is ending...")
 

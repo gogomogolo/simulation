@@ -11,6 +11,21 @@ class LifecycleGroup(object):
                 getattr(_observation_subgroup, "_GroupUplinkTransmissionObserver__group_id"))
             for _observation_subgroup in _observation_subgroups
         }
+        self.__group_id_to_successful_transmissions = {
+            getattr(_observation_subgroup, "_GroupUplinkTransmissionObserver__group_id"):
+            len(getattr(_observation_subgroup, "_GroupUplinkTransmissionObserver__end_devices_success_transmission"))
+            for _observation_subgroup in _observation_subgroups
+        }
+        self.__group_id_to_failed_transmissions = {
+            getattr(_observation_subgroup, "_GroupUplinkTransmissionObserver__group_id"):
+            len(getattr(_observation_subgroup, "_GroupUplinkTransmissionObserver__end_devices_fail_transmission"))
+            for _observation_subgroup in _observation_subgroups
+        }
+        self.__group_id_to_suspended_transmissions = {
+            getattr(_observation_subgroup, "_GroupUplinkTransmissionObserver__group_id"):
+            getattr(_observation_subgroup, "_GroupUplinkTransmissionObserver__observable_end_devices_count")
+            for _observation_subgroup in _observation_subgroups
+        }
 
     def __create_acknowledgements(self, successful_transmitters, group_id):
         end_device_ids = []

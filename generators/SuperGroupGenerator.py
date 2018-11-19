@@ -18,12 +18,16 @@ def __create_super_groups(sf_to_end_devices):
     for sf in sf_to_end_devices:
         time_on_air = __get_time_on_air(sf)
         group_period_in_seconds = ProcessUtil.calculate_group_period_in_seconds(time_on_air)
-        super_group_period_in_seconds = ProcessUtil.calculate_super_group_period(time_on_air)
-        group_number_in_super_group = ProcessUtil.calculate_group_number_in_super_group(super_group_period_in_seconds, group_period_in_seconds)
+        group_period_with_delay_in_seconds = ProcessUtil.calculate_group_period_with_delay_in_seconds(time_on_air)
+        super_group_period_in_seconds = Constants.SF_TO_SUPER_GROUP_PERIOD_IN_SEC.get(sf)
+
+        group_number_in_super_group = \
+            ProcessUtil.calculate_group_number_in_super_group(super_group_period_in_seconds,
+                                                              group_period_with_delay_in_seconds)
         group_id_length_in_bits = ProcessUtil.calculate_group_id_length_in_bits(group_number_in_super_group)
         time_slot_in_upper_link = ProcessUtil.calculate_time_slot_in_group_ul(time_on_air)
 
-        group_id_to_end_devices = __create_group_id_to_end_devices_dictionary(sf_to_end_devices[sf], group_id_length_in_bits)
+        group_id_to_end_devices = __create_group_id_to_end_devices(sf_to_end_devices[sf], group_id_length_in_bits)
         super_group = __create_super_group(group_id_to_end_devices, sf, time_on_air,
                                            time_slot_in_upper_link, group_period_in_seconds)
 
@@ -45,7 +49,7 @@ def __create_sf_to_end_devices(end_devices):
     return sf_to_end_devices
 
 
-def __create_group_id_to_end_devices_dictionary(end_devices, group_id_length_in_bits):
+def __create_group_id_to_end_devices(end_devices, group_id_length_in_bits):
     groupid_to_end_devices = {}
 
     for end_device in end_devices:

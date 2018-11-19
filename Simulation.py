@@ -1,7 +1,8 @@
-from processors.Preprocessor import initialize
-from processors.Mainprocessor import run
+import processors.Preprocessor as Preprocessor
+import processors.Mainprocessor as Mainprocessor
+import processors.Postprocessor as Postprocessor
 
-END_DEVICE_NUMBER = 100000
+END_DEVICE_NUMBER = 10000
 
 MIN_SF = 7
 MAX_SF = 12
@@ -18,6 +19,7 @@ BANDWIDTH_IN_HERTZ = 125000
 NUMBER_OF_PREAMBLE = 8
 SYNCHRONIZATION_WORD = 8
 SF_TO_MAC_PAYLOAD_IN_BYTE = {7: 250, 8: 250, 9: 123, 10: 59, 11: 59, 12: 59}
+SF_TO_SUPER_GROUP_PERIOD_IN_SEC = {7: 3600, 8: 3600, 9: 3600, 10: 3600, 11: 3600, 12: 3600}
 CRC = 1
 IH = 0
 DE = 0
@@ -25,9 +27,9 @@ CODING_RATE = 1
 
 DUTY_CYCLE_IN_PERCENTAGE = 1
 
-SIMULATION_LIFE_TIME_IN_SECONDS = 3600
+SIMULATION_LIFE_TIME_IN_SECONDS = 7200
 
-initialize(
+Preprocessor.initialize(
     END_DEVICE_NUMBER
     ,MIN_SF
     ,MAX_SF
@@ -38,10 +40,12 @@ initialize(
     ,NUMBER_OF_PREAMBLE
     ,SYNCHRONIZATION_WORD
     ,SF_TO_MAC_PAYLOAD_IN_BYTE
+    ,SF_TO_SUPER_GROUP_PERIOD_IN_SEC
     ,CRC
     ,IH
     ,DE
     ,CODING_RATE
     ,DUTY_CYCLE_IN_PERCENTAGE
     ,SIMULATION_LIFE_TIME_IN_SECONDS)
-run()
+Mainprocessor.run()
+Postprocessor.prepare_statistics()

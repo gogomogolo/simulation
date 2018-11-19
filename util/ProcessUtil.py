@@ -2,8 +2,8 @@ import parameters.Constants as Constants
 import math
 
 
-def calculate_group_number_in_super_group(super_group_period_in_seconds, group_period_in_seconds):
-    return int(super_group_period_in_seconds / group_period_in_seconds)
+def calculate_group_number_in_super_group(super_group_period_in_seconds, group_period_with_delay_in_seconds):
+    return int(super_group_period_in_seconds / group_period_with_delay_in_seconds)
 
 
 def calculate_group_id_length_in_bits(group_count_in_super_group):
@@ -18,7 +18,7 @@ def calculate_time_slot_in_group_ul(sf_message_period_in_seconds):
     return int(Constants.GROUP_LENGTH_IN_SECONDS / sf_message_period_in_seconds)
 
 
-def calculate_super_group_period(sf_message_period_in_seconds):
+def calculate_group_period_with_delay_in_seconds(sf_message_period_in_seconds):
     return sf_message_period_in_seconds * float(100/Constants.DUTY_CYCLE_IN_PERCENTAGE)
 
 
