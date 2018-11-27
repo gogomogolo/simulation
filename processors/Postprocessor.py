@@ -13,7 +13,7 @@ def prepare_statistics():
     for observation_group in observation_groups:
         spreading_factor = getattr(observation_group, "_ObservationGroup__sf")
         lifecycles = getattr(observation_group, "_ObservationGroup__lifecycles")
-        #sketch_transmission_state_rate_to_lifecycle(spreading_factor, lifecycles, dir_name)
+        sketch_transmission_state_rate_to_lifecycle(spreading_factor, lifecycles, dir_name)
         sketch_payload_of_ack_to_group_id(spreading_factor, lifecycles, dir_name)
 
 
@@ -49,7 +49,7 @@ def sketch_payload_of_ack_to_group_id(sf, lifecycles, dir_name):
     plt.legend()
 
     plt.tight_layout()
-    plt.savefig(os.path.join(dir_name, 'SF_' + str(sf) + '_' + time.strftime("%Y%m%d-%H%M%S") + '.png'))
+    plt.savefig(os.path.join(dir_name, 'Payload_SF_' + str(sf) + '_' + time.strftime("%Y%m%d-%H%M%S") + '.png'))
     plt.clf()
 
 
@@ -104,6 +104,6 @@ def sketch_transmission_state_rate_to_lifecycle(sf, lifecycles, dir_name):
     plt.legend()
 
     plt.tight_layout()
-    plt.savefig(os.path.join(dir_name, 'SF_' + str(sf) + '_' + time.strftime("%Y%m%d-%H%M%S") + '.png'))
+    plt.savefig(os.path.join(dir_name, 'State_SF_' + str(sf) + '_' + time.strftime("%Y%m%d-%H%M%S") + '.png'))
     plt.clf()
 
