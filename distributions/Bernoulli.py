@@ -4,11 +4,11 @@ from contracts.Distribution import Distribution
 
 class Bernoulli(Distribution):
     def __init__(self, size, p):
-        self.p = p
+        self._bernoulli = bernoulli(p=p)
         self.size = size
 
     def sample(self):
-        return bernoulli.rvs(size=self.size, p=self.p)
+        return self._bernoulli.rvs(size=self.size)
 
     def pf(self):
         return bernoulli.pmf()

@@ -1,5 +1,4 @@
 import parameters.Results as Results
-import parameters.Constants as Constants
 import time
 import os
 import numpy as np
@@ -16,6 +15,73 @@ def prepare_statistics():
         sketch_transmission_state_rate_to_lifecycle(spreading_factor, lifecycles, dir_name)
         sketch_payload_of_ack_to_group_id(spreading_factor, lifecycles, dir_name)
 
+    for super_group in Results.SUPER_GROUPS:
+        sketch_time_slot_number_to_group_id(super_group, dir_name)
+        sketch_device_number_to_group_id(super_group, dir_name)
+
+
+def sketch_device_number_to_group_id(super_group, dir_name):
+    sf = getattr(super_group, "_SuperGroup__sf")
+    groups = getattr(super_group, "_SuperGroup__groups")
+
+    gid_x_axis = [getattr(group, "_Group__id") for group in groups]
+    device_num_y_axis = ()
+
+    for group in groups:
+        device_num_y_axis = device_num_y_axis + (len(getattr(group, "_Group__end_devices")),)
+
+    plt.plot()
+    index = np.arange(len(gid_x_axis))
+    bar_width = 0.50
+    opacity = 0.8
+
+    rects1 = plt.bar(index, device_num_y_axis, bar_width,
+                     alpha=opacity,
+                     color='g',
+                     label='GroupId Device Num')
+
+    plt.xlabel('Group Id')
+    plt.ylabel('Device Number')
+    plt.title('Spreading Factor: ' + str(sf))
+    plt.xticks(index + bar_width, gid_x_axis)
+    plt.legend()
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(dir_name, 'Device_Num_SF_' + str(sf) + '_' + time.strftime("%Y%m%d-%H%M%S") + '.png'))
+    plt.gcf().clear()
+    plt.clf()
+
+
+def sketch_time_slot_number_to_group_id(super_group, dir_name):
+    sf = getattr(super_group, "_SuperGroup__sf")
+    groups = getattr(super_group, "_SuperGroup__groups")
+
+    gid_x_axis = [getattr(group, "_Group__id") for group in groups]
+    time_slot_num_y_axis = ()
+
+    for group in groups:
+        time_slot_num_y_axis = time_slot_num_y_axis + (getattr(group, "_Group__time_slot_number"),)
+
+    plt.plot()
+    index = np.arange(len(gid_x_axis))
+    bar_width = 0.50
+    opacity = 0.8
+
+    rects1 = plt.bar(index, time_slot_num_y_axis, bar_width,
+                     alpha=opacity,
+                     color='g',
+                     label='GroupId Time Slot')
+
+    plt.xlabel('Group Id')
+    plt.ylabel('Time Slot Number')
+    plt.title('Spreading Factor: ' + str(sf))
+    plt.xticks(index + bar_width, gid_x_axis)
+    plt.legend()
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(dir_name, 'Time_Slot_SF_' + str(sf) + '_' + time.strftime("%Y%m%d-%H%M%S") + '.png'))
+    plt.gcf().clear()
+    plt.clf()
 
 def sketch_payload_of_ack_to_group_id(sf, lifecycles, dir_name):
     for lifecycle_group in lifecycles:
@@ -34,7 +100,7 @@ def sketch_payload_of_ack_to_group_id(sf, lifecycles, dir_name):
 
     plt.plot()
     index = np.arange(len(gid_axis))
-    bar_width = 0.1
+    bar_width = 0.5
     opacity = 0.8
 
     rects1 = plt.bar(index, payload_in_byte_axis, bar_width,
@@ -50,6 +116,7 @@ def sketch_payload_of_ack_to_group_id(sf, lifecycles, dir_name):
 
     plt.tight_layout()
     plt.savefig(os.path.join(dir_name, 'Payload_SF_' + str(sf) + '_' + time.strftime("%Y%m%d-%H%M%S") + '.png'))
+    plt.gcf().clear()
     plt.clf()
 
 
@@ -105,5 +172,6 @@ def sketch_transmission_state_rate_to_lifecycle(sf, lifecycles, dir_name):
 
     plt.tight_layout()
     plt.savefig(os.path.join(dir_name, 'State_SF_' + str(sf) + '_' + time.strftime("%Y%m%d-%H%M%S") + '.png'))
+    plt.gcf().clear()
     plt.clf()
 

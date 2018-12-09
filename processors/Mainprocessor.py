@@ -29,6 +29,7 @@ def run():
 
     end_devices = EndDeviceDistributor.distribute(exponential)
     super_groups = SuperGroupGenerator.generate(end_devices)
+    Results.SUPER_GROUPS = super_groups
 
     super_group_observers = __play_aggregated_acknowledge_scenario(super_groups)
     Results.SIMULATION_RESULT = __create_simulation_result(super_group_observers)
