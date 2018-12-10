@@ -83,6 +83,14 @@ def sketch_time_slot_number_to_group_id(super_group, dir_name):
     plt.gcf().clear()
     plt.clf()
 
+
+def sketch_state_of_time_slots(sf, lifecycles, dir_name):
+    for lifecycle_group in lifecycles:
+        gid_ack = getattr(lifecycle_group, "_LifecycleGroup__group_id_to_aggregated_acknowledgement")
+        break
+
+
+
 def sketch_payload_of_ack_to_group_id(sf, lifecycles, dir_name):
     for lifecycle_group in lifecycles:
         lifecycle = getattr(lifecycle_group, "_LifecycleGroup__cycle")
