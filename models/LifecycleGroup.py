@@ -26,6 +26,16 @@ class LifecycleGroup(object):
             getattr(_observation_subgroup, "_GroupUplinkTransmissionObserver__observable_end_devices_count")
             for _observation_subgroup in _observation_subgroups
         }
+        self.__group_id_to_time_slot_status = {
+            getattr(_observation_subgroup, "_GroupUplinkTransmissionObserver__group_id"):
+            getattr(_observation_subgroup, "_GroupUplinkTransmissionObserver__time_slot_to_communication_status")
+            for _observation_subgroup in _observation_subgroups
+        }
+        self.__group_id_to_time_slot_statistics = {
+            getattr(_observation_subgroup, "_GroupUplinkTransmissionObserver__group_id"):
+            getattr(_observation_subgroup, "_GroupUplinkTransmissionObserver__time_slot_to_existing_device_number")
+            for _observation_subgroup in _observation_subgroups
+        }
 
     def __create_acknowledgements(self, successful_transmitters, group_id):
         end_device_ids = []
