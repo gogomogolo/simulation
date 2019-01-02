@@ -1,5 +1,6 @@
 import threading
 import generators.GroupUplinkTransmissionObserverGenerator as GroupUplinkTransmissionObserverGenerator
+import generators.GroupTransmissionObserverGenerator as GroupTransmissionObserverGenerator
 import util.ProcessUtil as ProcessUtil
 
 
@@ -29,4 +30,4 @@ class SuperGroupObserverTask(threading.Thread):
             self.__barrier.wait()
 
     def __create_group_observers(self, groups):
-        return [GroupUplinkTransmissionObserverGenerator.generate(group) for group in groups]
+        return [GroupTransmissionObserverGenerator.generate(group) for group in groups]

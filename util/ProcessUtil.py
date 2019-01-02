@@ -25,3 +25,7 @@ def calculate_group_period_with_delay_in_seconds(sf_message_period_in_seconds):
 def calculate_super_group_lifecycle(super_group_period_in_seconds):
     return int(Constants.SIMULATION_LIFE_TIME_IN_SECONDS / super_group_period_in_seconds)
 
+
+def calculate_active_transmitters_of_group(end_device_num_of_group):
+    return int(Constants.ACTIVATION_PROB*end_device_num_of_group)
+
