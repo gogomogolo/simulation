@@ -1,22 +1,22 @@
 import util.ProcessUtil as ProcessUtil
 import random
 
+
 class GroupTransmissionObserver(object):
     def __init__(self, group_id, sf, end_devices, time_slot_number):
         self.__group_id = group_id
         self.__sf = sf
         self.__group_device_number = len(end_devices)
-        self.__group_observable_device_number = len(end_devices)
-        self.__group_observable_device = end_devices.copy()
-        self.__end_devices = end_devices.copy()
         self.__time_slot_number = time_slot_number
+        self.__idle_transmitters = end_devices.copy()
+        self.__successful_transmitters = []
+        self.__failed_transmitters = []
+        self.__random = random.Random()
         self.__seeds = []
-        self.__end_devices_success_transmission = []
-        self.__end_devices_fail_transmission = []
 
     def observe(self):
-        observable_idle_device_amount = self.__group_observable_device_number
-        failed_transmitters = self.__end_devices_fail_transmission
+        observable_idle_device_amount = len(self.__idle_transmitters)
+        failed_transmitters = self.__failed_transmitters
         resource_usages = self.__monitor_resource_usages(observable_idle_device_amount, failed_transmitters)
         self.__update_transmissions_state(resource_usages)
 
@@ -24,9 +24,9 @@ class GroupTransmissionObserver(object):
         for resource in resource_usages:
             resource_consumers = resource_usages[resource]
             if self.__is_collision(resource_consumers):
-                self.__end_devices_fail_transmission += resource_consumers
+                self.__failed_transmitters += resource_consumers
             else:
-                self.__end_devices_success_transmission += resource_consumers
+                self.__successful_transmitters += resource_consumers
         self.__update_fail_transmissions()
 
     def __is_collision(self, resource_consumers):
@@ -35,15 +35,16 @@ class GroupTransmissionObserver(object):
     def __update_fail_transmissions(self):
         succeeded_transmitters = {
             getattr(succeeded_transmitter, "_id"): ' '
-            for succeeded_transmitter in self.__end_devices_success_transmission
+            for succeeded_transmitter in self.__successful_transmitters
         }
 
         index = 0
-        for failed_transmitter in self.__end_devices_fail_transmission:
+        for failed_transmitter in self.__failed_transmitters:
             transmitter_id = getattr(failed_transmitter, "_id")
             if succeeded_transmitters.get(transmitter_id) is not None:
-                self.__end_devices_fail_transmission.pop(index)
-            index += 1
+                self.__failed_transmitters.pop(index)
+            else:
+                index += 1
 
     def __monitor_resource_usages(self, observable_idle_device_amount, failed_transmitters):
         used_resources = self.__find_used_time_slots(observable_idle_device_amount, len(failed_transmitters))
@@ -66,16 +67,16 @@ class GroupTransmissionObserver(object):
             self.__select_active_transmitters_index(active_transmitters_amount, observable_idle_device_amount)
         active_transmitters = []
         for index in active_transmitters_indexes:
-            active_transmitters.append(self.__group_observable_device.pop(index))
-            self.__group_observable_device_number -= 1
+            active_transmitters.append(self.__idle_transmitters.pop(index))
 
         return active_transmitters
 
     def __select_active_transmitters_index(self, transmitters_amount, observable_idle_device_amount):
-        seed = random.randint(1, 30000)
-        random.seed(seed)
-        indexes = [random.randint(0, observable_idle_device_amount-1) for i in range(1, transmitters_amount+1)]
+        seed = self.__random.randint(1, 30000)
+        self.__random.seed(seed)
+        indexes = self.__random.sample(range(0, observable_idle_device_amount-1), transmitters_amount)
         self.__seeds.append(seed)
+        indexes.sort(reverse=True)
         return indexes
 
     def __compose_resource_usages(self, used_resources, transmitters):

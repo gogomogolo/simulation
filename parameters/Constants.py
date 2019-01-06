@@ -23,7 +23,7 @@ DE = 0
 CODING_RATE = 1
 
 
-ACTIVATION_PROB = 0
+ACTIVATION_PROB = 0.3
 
 
 # Region specific parameters
