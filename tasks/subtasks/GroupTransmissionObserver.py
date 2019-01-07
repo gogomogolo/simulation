@@ -1,5 +1,7 @@
 import util.ProcessUtil as ProcessUtil
 import random
+import logging
+import sys
 
 
 class GroupTransmissionObserver(object):
@@ -13,8 +15,10 @@ class GroupTransmissionObserver(object):
         self.__failed_transmitters = []
         self.__random = random.Random()
         self.__seeds = []
+        self.__logger = self.__get_logger()
 
     def observe(self):
+        self.__logger.info()
         observable_idle_device_amount = len(self.__idle_transmitters)
         failed_transmitters = self.__failed_transmitters
         resource_usages = self.__monitor_resource_usages(observable_idle_device_amount, failed_transmitters)
@@ -50,6 +54,7 @@ class GroupTransmissionObserver(object):
         used_resources = self.__find_used_time_slots(observable_idle_device_amount, len(failed_transmitters))
         active_transmitters = self.__find_active_transmitters(observable_idle_device_amount)
         transmitters = active_transmitters + failed_transmitters
+        failed_transmitters.clear()
         resource_usage = self.__compose_resource_usages(used_resources, transmitters)
         return resource_usage
 
@@ -87,3 +92,13 @@ class GroupTransmissionObserver(object):
             else:
                 resource_usages[used_resources[index]].append(transmitters[index])
         return resource_usages
+
+    def __get_logger(self):
+        formatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
+                                      datefmt='%Y-%m-%d %H:%M:%S')
+        screen_handler = logging.StreamHandler(stream=sys.stdout)
+        screen_handler.setFormatter(formatter)
+        logger = logging.getLogger(__name__)
+        logger.addHandler(screen_handler)
+        logger.setLevel(logging.DEBUG)
+        return logger
