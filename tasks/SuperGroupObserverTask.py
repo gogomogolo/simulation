@@ -2,6 +2,7 @@ import threading
 import generators.GroupUplinkTransmissionObserverGenerator as GroupUplinkTransmissionObserverGenerator
 import generators.GroupTransmissionObserverGenerator as GroupTransmissionObserverGenerator
 import util.ProcessUtil as ProcessUtil
+import copy
 
 
 class SuperGroupObserverTask(threading.Thread):
@@ -17,13 +18,13 @@ class SuperGroupObserverTask(threading.Thread):
         current_lifecycle = 0
         super_group_period_in_seconds = getattr(self.__super_group, "_SuperGroup__period")
         super_group_lifecycle = ProcessUtil.calculate_super_group_lifecycle(super_group_period_in_seconds)
+        groups = getattr(self.__super_group, "_SuperGroup__groups")
+        group_observers = self.__create_group_observers(groups)
         try:
             while current_lifecycle < super_group_lifecycle:
-                groups = getattr(self.__super_group, "_SuperGroup__groups")
-                group_observers = self.__create_group_observers(groups)
                 for group_observer in group_observers:
                     group_observer.observe()
-                self.__lifecycle_to_finalized_group_observers[current_lifecycle] = group_observers
+                self.__lifecycle_to_finalized_group_observers[current_lifecycle] = copy.deepcopy(group_observers)
                 current_lifecycle += 1
 
         finally:
