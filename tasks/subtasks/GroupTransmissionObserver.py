@@ -1,7 +1,6 @@
 import util.ProcessUtil as ProcessUtil
+import util.LogUtil as LogUtil
 import random
-import logging
-import sys
 
 
 class GroupTransmissionObserver(object):
@@ -10,19 +9,26 @@ class GroupTransmissionObserver(object):
         self.__sf = sf
         self.__group_device_number = len(end_devices)
         self.__time_slot_number = time_slot_number
+        self.__attempt = 1
         self.__idle_transmitters = end_devices.copy()
         self.__successful_transmitters = []
         self.__failed_transmitters = []
         self.__random = random.Random()
         self.__seeds = []
-        self.__logger = self.__get_logger()
 
     def observe(self):
-        self.__logger.info()
+        LogUtil.get_file_logger(__name__).info(
+            '<Attempt> : %s | <SF> : %s | <GroupId> : %s | <DeviceAmount> : %s | <TimeSlotAmount> : %s | '
+            '<IdleTransmittersAmount> : %s '
+            '| <SuccessfulTransmittersAmount> : %s | <FailedTransmittersAmount> : %s ',
+            str(self.__attempt), str(self.__sf), str(self.__group_id), str(self.__group_device_number),
+            str(self.__time_slot_number), str(len(self.__idle_transmitters)),
+            str(len(self.__successful_transmitters)), str(len(self.__failed_transmitters)))
         observable_idle_device_amount = len(self.__idle_transmitters)
         failed_transmitters = self.__failed_transmitters
         resource_usages = self.__monitor_resource_usages(observable_idle_device_amount, failed_transmitters)
         self.__update_transmissions_state(resource_usages)
+        self.__attempt += 1
 
     def __update_transmissions_state(self, resource_usages):
         for resource in resource_usages:
@@ -60,14 +66,16 @@ class GroupTransmissionObserver(object):
 
     def __find_used_time_slots(self, observable_idle_device_amount, failed_transmitters_num):
         time_slots = []
-        active_transmitters_amount = ProcessUtil.calculate_active_transmitters_of_group(observable_idle_device_amount)
+        active_transmitters_amount = \
+            ProcessUtil.calculate_active_transmitters_of_group(self.__sf, observable_idle_device_amount)
         transmitters_amount = active_transmitters_amount + failed_transmitters_num
         for i in range(0, transmitters_amount):
-            time_slots.append(random.randint(0, self.__time_slot_number-1))
+            time_slots.append(random.randint(0, self.__time_slot_number - 1))
         return time_slots
 
     def __find_active_transmitters(self, observable_idle_device_amount):
-        active_transmitters_amount = ProcessUtil.calculate_active_transmitters_of_group(observable_idle_device_amount)
+        active_transmitters_amount = \
+            ProcessUtil.calculate_active_transmitters_of_group(self.__sf, observable_idle_device_amount)
         active_transmitters_indexes = \
             self.__select_active_transmitters_index(active_transmitters_amount, observable_idle_device_amount)
         active_transmitters = []
@@ -79,7 +87,7 @@ class GroupTransmissionObserver(object):
     def __select_active_transmitters_index(self, transmitters_amount, observable_idle_device_amount):
         seed = self.__random.randint(1, 30000)
         self.__random.seed(seed)
-        indexes = self.__random.sample(range(0, observable_idle_device_amount-1), transmitters_amount)
+        indexes = self.__random.sample(range(0, observable_idle_device_amount - 1), transmitters_amount)
         self.__seeds.append(seed)
         indexes.sort(reverse=True)
         return indexes
@@ -92,13 +100,3 @@ class GroupTransmissionObserver(object):
             else:
                 resource_usages[used_resources[index]].append(transmitters[index])
         return resource_usages
-
-    def __get_logger(self):
-        formatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
-                                      datefmt='%Y-%m-%d %H:%M:%S')
-        screen_handler = logging.StreamHandler(stream=sys.stdout)
-        screen_handler.setFormatter(formatter)
-        logger = logging.getLogger(__name__)
-        logger.addHandler(screen_handler)
-        logger.setLevel(logging.DEBUG)
-        return logger
