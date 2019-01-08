@@ -3,6 +3,8 @@ import time
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import util.LogUtil as LogUtil
+import parameters.Constants as Constants
 
 
 def prepare_statistics():
@@ -261,3 +263,22 @@ def sketch_transmission_state_rate_to_lifecycle(sf, lifecycles, dir_name):
     plt.gcf().clear()
     plt.clf()
 
+
+def flush():
+    observation_groups = getattr(Results.SIMULATION_RESULT, "_SimulationResult__observation_groups")
+    for observation_group in observation_groups:
+        spreading_factor = getattr(observation_group, "_ObservationGroup__sf")
+        lifecycles = getattr(observation_group, "_ObservationGroup__lifecycles")
+        for lifecycle_group in lifecycles:
+            lifecycle = getattr(lifecycle_group, "_AttemptSuperGroup__cycle")
+            gid_ack = getattr(lifecycle_group, "_AttemptSuperGroup__group_id_to_aggregated_acknowledgement")
+            for gid in gid_ack:
+                ack = gid_ack[gid]
+                payload_in_byte = 0
+                if ack is not None:
+                    payload_in_byte = (len(list(ack)*len(list(ack)[0]))/4)
+                LogUtil.get_file_logger(__name__).info(
+                    "<Attempt> : %s | <SF> : %s | <GroupId> : %s "
+                    "| <MacPayloadByte> : %s | <MaxBoundaryMacPayload> : %s ",
+                    str(lifecycle), str(spreading_factor), str(gid),
+                    str(payload_in_byte), str(Constants.SF_TO_MAC_PAYLOAD_IN_BYTE[spreading_factor]))

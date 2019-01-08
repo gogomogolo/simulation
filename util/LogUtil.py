@@ -1,5 +1,9 @@
 import logging
 import sys
+import os
+import time
+
+LOG_FILE_DIR = os.path.abspath(os.path.join('results', time.strftime("%Y%m%d-%H%M%S")))
 
 FILE_LOGGER = {}
 STDOUT_LOGGER = {}
@@ -28,10 +32,13 @@ def __create_stdout_logger(class_name):
 
 
 def get_file_logger(class_name):
+    if os.path.exists(LOG_FILE_DIR) is False:
+        os.makedirs(LOG_FILE_DIR)
     if FILE_LOGGER.__contains__(class_name):
         return FILE_LOGGER.get(class_name)
 
-    logger = __create_file_logger(class_name, class_name)
+    file_name = os.path.join(LOG_FILE_DIR, class_name)
+    logger = __create_file_logger(class_name, file_name)
     FILE_LOGGER[class_name] = logger
     return FILE_LOGGER.get(class_name)
 
