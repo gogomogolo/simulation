@@ -48,6 +48,7 @@ Preprocessor.initialize(
     ,DE
     ,CODING_RATE
     ,DUTY_CYCLE_IN_PERCENTAGE
-    ,SIMULATION_LIFE_TIME_IN_SECONDS)
+    ,SIMULATION_LIFE_TIME_IN_SECONDS
+    ,SF_TO_ACTIVATION_PROB)
 Mainprocessor.run()
-#Postprocessor.prepare_statistics()
+Postprocessor.flush()
