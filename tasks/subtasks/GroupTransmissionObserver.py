@@ -9,7 +9,7 @@ class GroupTransmissionObserver(object):
         self.__sf = sf
         self.__group_device_number = len(end_devices)
         self.__time_slot_number = time_slot_number
-        self.__attempt = 1
+        self.__attempt = 0
         self.__idle_transmitters = end_devices.copy()
         self.__successful_transmitters = []
         self.__failed_transmitters = []
@@ -17,18 +17,19 @@ class GroupTransmissionObserver(object):
         self.__seeds = []
 
     def observe(self):
-        LogUtil.get_file_logger(__name__).info(
-            '<Attempt> : %s | <SF> : %s | <GroupId> : %s | <DeviceAmount> : %s | <TimeSlotAmount> : %s | '
-            '<IdleTransmittersAmount> : %s '
-            '| <SuccessfulTransmittersAmount> : %s | <FailedTransmittersAmount> : %s ',
-            str(self.__attempt), str(self.__sf), str(self.__group_id), str(self.__group_device_number),
-            str(self.__time_slot_number), str(len(self.__idle_transmitters)),
-            str(len(self.__successful_transmitters)), str(len(self.__failed_transmitters)))
         observable_idle_device_amount = len(self.__idle_transmitters)
         failed_transmitters = self.__failed_transmitters
         resource_usages = self.__monitor_resource_usages(observable_idle_device_amount, failed_transmitters)
         self.__update_transmissions_state(resource_usages)
         self.__attempt += 1
+
+        LogUtil.get_file_logger(__name__).info(
+            '| <Attempt> : %s | <SF> : %s | <GroupId> : %s | <DeviceAmount> : %s | <TimeSlotAmount> : %s | '
+            '<IdleTransmittersAmount> : %s '
+            '| <SuccessfulTransmittersAmount> : %s | <FailedTransmittersAmount> : %s |',
+            str(self.__attempt), str(self.__sf), str(self.__group_id), str(self.__group_device_number),
+            str(self.__time_slot_number), str(len(self.__idle_transmitters)),
+            str(len(self.__successful_transmitters)), str(len(self.__failed_transmitters)))
 
     def __update_transmissions_state(self, resource_usages):
         for resource in resource_usages:

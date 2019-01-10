@@ -1,6 +1,7 @@
 import parameters.Constants as Constants
 import util.LorawanUtil as LorawanUtil
 import util.ProcessUtil as ProcessUtil
+import util.LogUtil as LogUtil
 
 from models.Group import Group
 from models.SuperGroup import SuperGroup
@@ -32,6 +33,13 @@ def __create_super_groups(sf_to_end_devices):
                                            time_slot_in_upper_link, group_period_in_seconds)
 
         super_groups.append(SuperGroup(sf, super_group, super_group_period_in_seconds, group_number_in_super_group))
+
+        LogUtil.get_file_logger(__name__).info(
+            '| <SF> : %s | <DeviceAmount> : %s | <SuperGroupPeriodSec> : %s | '
+            '<GroupPeriodSec> : %s '
+            '| <GroupPeriodWithDelaySec> : %s | <GroupNumber> : %s |',
+            str(sf), str(len(sf_to_end_devices[sf])), str(super_group_period_in_seconds),
+            str(group_period_in_seconds), str(group_period_with_delay_in_seconds), str(group_number_in_super_group))
 
     return super_groups
 
