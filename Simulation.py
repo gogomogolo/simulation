@@ -1,6 +1,8 @@
 import processors.Preprocessor as Preprocessor
 import processors.Mainprocessor as Mainprocessor
 import processors.Postprocessor as Postprocessor
+import processors.FileProcessor as FileProcessor
+import processors.DrawProcessor as DrawProcessor
 
 END_DEVICE_NUMBER = 100000
 
@@ -52,3 +54,7 @@ Preprocessor.initialize(
     ,SF_TO_ACTIVATION_PROB)
 Mainprocessor.run()
 Postprocessor.flush()
+super_group_analysis = FileProcessor.get_super_group_analysis()
+group_analysis = FileProcessor.get_group_analysis(super_group_analysis)
+DrawProcessor.draw_group_states(group_analysis)
+

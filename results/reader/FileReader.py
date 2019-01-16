@@ -6,6 +6,6 @@ class FileReader(object):
     def read(self):
         if len(self.output) == 0:
             with open(self.path, 'r') as file:
-                self.output = file.read()
+                self.output = file.readlines()
 
         return self.output
