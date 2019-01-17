@@ -5,3 +5,13 @@ def spread(l, value):
     else:
         i = l.index(min(l))
         l[i] -= value
+
+
+def sum_list(l1, l2):
+    zipped = zip(l1, l2)
+    return [x+y for x, y in zipped]
+
+
+def zero_list(lenth):
+    return [0]*lenth
+
