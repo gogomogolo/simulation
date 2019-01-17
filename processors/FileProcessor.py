@@ -17,7 +17,7 @@ def get_group_analysis(super_group_analysis):
         group_number = getattr(analysis, "group_number")
         analysis = []
         for i in range(0, group_number):
-            group_id = __get_bit_format(i, group_number-1)
+            group_id = __get_bit_format(i, group_number)
             file_to_group_analysis_logic = FileToGroupAnalysis(sf, group_id)
             file_to_group_analysis_converter = ObjectConverter(group_details_reader, file_to_group_analysis_logic)
             analysis.append(file_to_group_analysis_converter.convert())
@@ -38,10 +38,10 @@ def get_super_group_analysis():
         file_to_group_analysis_converter = \
             ObjectConverter(super_group_details_reader, file_to_super_group_analysis_logic)
         super_group_analysis.append(file_to_group_analysis_converter.convert())
-    return  super_group_analysis
+    return super_group_analysis
 
 
 def __get_bit_format(_id, max_id):
-    _id_length = math.ceil(math.log(max_id, 2))
+    _id_length = int(math.log(max_id, 2))
     _id_bit_notation = '0'+str(_id_length)+'b'
     return format(_id, _id_bit_notation)

@@ -26,20 +26,21 @@ def __create_super_groups(sf_to_end_devices):
             ProcessUtil.calculate_group_number_in_super_group(super_group_period_in_seconds,
                                                               group_period_with_delay_in_seconds)
         group_id_length_in_bits = ProcessUtil.calculate_group_id_length_in_bits(group_number_in_super_group)
+        exact_group_number = (2**group_id_length_in_bits)
         time_slot_in_upper_link = ProcessUtil.calculate_time_slot_in_group_ul(time_on_air)
 
         group_id_to_end_devices = __create_group_id_to_end_devices(sf_to_end_devices[sf], group_id_length_in_bits)
         super_group = __create_super_group(group_id_to_end_devices, sf, time_on_air,
                                            time_slot_in_upper_link, group_period_in_seconds)
 
-        super_groups.append(SuperGroup(sf, super_group, super_group_period_in_seconds, group_number_in_super_group))
+        super_groups.append(SuperGroup(sf, super_group, super_group_period_in_seconds, exact_group_number))
 
         LogUtil.get_file_logger(__name__).info(
             '| <SF> : %s | <DeviceAmount> : %s | <SuperGroupPeriodSec> : %s | '
             '<GroupPeriodSec> : %s '
             '| <GroupPeriodWithDelaySec> : %s | <GroupNumber> : %s |',
             str(sf), str(len(sf_to_end_devices[sf])), str(super_group_period_in_seconds),
-            str(group_period_in_seconds), str(group_period_with_delay_in_seconds), str(group_number_in_super_group))
+            str(group_period_in_seconds), str(group_period_with_delay_in_seconds), str(exact_group_number))
 
     return super_groups
 

@@ -7,7 +7,7 @@ def calculate_group_number_in_super_group(super_group_period_in_seconds, group_p
 
 
 def calculate_group_id_length_in_bits(group_count_in_super_group):
-    return int(math.ceil(math.log(group_count_in_super_group, 2)))
+    return int(math.floor(math.log(group_count_in_super_group, 2)))
 
 
 def calculate_group_period_in_seconds(sf_message_period_in_seconds):

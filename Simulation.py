@@ -57,4 +57,6 @@ Postprocessor.flush()
 super_group_analysis = FileProcessor.get_super_group_analysis()
 group_analysis = FileProcessor.get_group_analysis(super_group_analysis)
 DrawProcessor.draw_group_states(group_analysis)
+DrawProcessor.draw_super_group_states(group_analysis)
+DrawProcessor.draw_total_all_transmission_states(group_analysis)
 
