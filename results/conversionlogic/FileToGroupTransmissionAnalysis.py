@@ -1,7 +1,7 @@
-from results.model.GroupAnalysis import GroupAnalysis
+from results.model.GroupTransmissionAnalysis import GroupTransmissionAnalysis
 
 
-class FileToGroupAnalysis(object):
+class FileToGroupTransmissionAnalysis(object):
     def __init__(self, spreading_factor, group_id):
         self.spreading_factor = spreading_factor
         self.group_id = group_id
@@ -30,6 +30,6 @@ class FileToGroupAnalysis(object):
                 successes.append(success_amount)
                 fails.append(fail_amount)
 
-        return GroupAnalysis(self.spreading_factor, self.group_id,
-                             group_device_amount, attempts, idles,
-                             successes, fails)
+        return GroupTransmissionAnalysis(self.spreading_factor, self.group_id,
+                                         group_device_amount, attempts, idles,
+                                         successes, fails)

@@ -1,4 +1,4 @@
-class GroupAnalysis(object):
+class GroupTransmissionAnalysis(object):
     def __init__(self, sf, id, device_amount, attempts, idles, successes, fails):
         self.sf = sf
         self.id = id
