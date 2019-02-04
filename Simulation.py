@@ -5,7 +5,7 @@ import processors.FileProcessor as FileProcessor
 import processors.DrawProcessor as DrawProcessor
 import util.LogUtil as LogUtil
 
-END_DEVICE_NUMBER = 50000
+END_DEVICE_NUMBER = 10000
 
 MIN_SF = 7
 MAX_SF = 12
@@ -22,7 +22,7 @@ BANDWIDTH_IN_HERTZ = 125000
 NUMBER_OF_PREAMBLE = 8
 SYNCHRONIZATION_WORD = 8
 SF_TO_MAC_PAYLOAD_IN_BYTE = {7: 250, 8: 250, 9: 123, 10: 59, 11: 59, 12: 59}
-SF_TO_SUPER_GROUP_PERIOD_IN_SEC = {7: 21600, 8: 21600, 9: 21600, 10: 21600, 11: 21600, 12: 21600}
+SF_TO_SUPER_GROUP_PERIOD_IN_SEC = {7: 3600, 8: 3600, 9: 3600, 10: 3600, 11: 3600, 12: 3600}
 CRC = 1
 IH = 0
 DE = 0
@@ -32,7 +32,7 @@ DUTY_CYCLE_IN_PERCENTAGE = 1
 
 SIMULATION_LIFE_TIME_IN_SECONDS = 86400
 
-SF_TO_ACTIVATION_PROB = {7: 0.3, 8: 0.3, 9: 0.3, 10: 0.3, 11: 0.3, 12: 0.3}
+SF_TO_ACTIVATION_PROB = {7: 0.01, 8: 0.01, 9: 0.01, 10: 0.9, 11: 0.9, 12: 0.9}
 
 parameters = "\nEND_DEVICE_NUMBER = {END_DEVICE_NUMBER}\n" \
              "MIN_SF = {MIN_SF}\n" \
@@ -55,6 +55,9 @@ parameters = "\nEND_DEVICE_NUMBER = {END_DEVICE_NUMBER}\n" \
              "SIMULATION_LIFE_TIME_IN_SECONDS = {SIMULATION_LIFE_TIME_IN_SECONDS}\n" \
              "SF_TO_ACTIVATION_PROB = {SF_TO_ACTIVATION_PROB}\n"
 
+LogUtil.get_file_logger('generators.SuperGroupGenerator')
+LogUtil.get_file_logger('processors.Postprocessor')
+LogUtil.get_file_logger('tasks.subtasks.GroupTransmissionObserver')
 LogUtil.get_file_logger(__name__).info(parameters.format(
     END_DEVICE_NUMBER=END_DEVICE_NUMBER
     , MIN_SF=MIN_SF

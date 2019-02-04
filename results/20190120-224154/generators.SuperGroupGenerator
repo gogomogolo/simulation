@@ -1,0 +1,6 @@
+2019-01-20 22:41:55 INFO     | <SF> : 7 | <DeviceAmount> : 31686 | <SuperGroupPeriodSec> : 21600 | <GroupPeriodSec> : 15.389376 | <GroupPeriodWithDelaySec> : 38.9376 | <GroupNumber> : 512 |
+2019-01-20 22:41:55 INFO     | <SF> : 8 | <DeviceAmount> : 11656 | <SuperGroupPeriodSec> : 21600 | <GroupPeriodSec> : 15.686592 | <GroupPeriodWithDelaySec> : 68.6592 | <GroupNumber> : 256 |
+2019-01-20 22:41:55 INFO     | <SF> : 9 | <DeviceAmount> : 4288 | <SuperGroupPeriodSec> : 21600 | <GroupPeriodSec> : 15.656384 | <GroupPeriodWithDelaySec> : 65.63839999999999 | <GroupNumber> : 256 |
+2019-01-20 22:41:55 INFO     | <SF> : 10 | <DeviceAmount> : 1577 | <SuperGroupPeriodSec> : 21600 | <GroupPeriodSec> : 15.657408 | <GroupPeriodWithDelaySec> : 65.7408 | <GroupNumber> : 256 |
+2019-01-20 22:41:55 INFO     | <SF> : 11 | <DeviceAmount> : 580 | <SuperGroupPeriodSec> : 21600 | <GroupPeriodSec> : 16.232896 | <GroupPeriodWithDelaySec> : 123.2896 | <GroupNumber> : 128 |
+2019-01-20 22:41:55 INFO     | <SF> : 12 | <DeviceAmount> : 213 | <SuperGroupPeriodSec> : 21600 | <GroupPeriodSec> : 17.301952 | <GroupPeriodWithDelaySec> : 230.1952 | <GroupNumber> : 64 |

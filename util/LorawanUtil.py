@@ -10,7 +10,7 @@ def calculate_preamble_symbol(np):
 
 
 def calculate_packet_symbol(sw, pl, sf, crc, ih, de, cr):
-    return sw + max(math.ceil((8 * pl - 4 * sf + 28 + 16 * crc - 20 * ih) / float(4 * (sf - 2 * de))) * (cr + 4), 0)
+    return sw + max(math.ceil((8 * (13+pl) - 4 * sf + 28 + 16 * crc - 20 * ih) / float(4 * (sf - 2 * de))) * (cr + 4), 0)
 
 
 def calculate_time_on_air(bw_in_hz, np, sw, pl, sf, crc, ih, de, cr):
