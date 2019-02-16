@@ -281,4 +281,4 @@ def flush():
                     "| <Attempt> : %s | <SF> : %s | <GroupId> : %s "
                     "| <MacPayloadByte> : %s | <MaxBoundaryMacPayload> : %s |",
                     str(lifecycle+1), str(spreading_factor), str(gid),
-                    str(payload_in_byte), str(Constants.SF_TO_MAC_PAYLOAD_IN_BYTE[spreading_factor]))
+                    str(payload_in_byte), str(Constants.SF_TO_MAX_MAC_PAYLOAD_IN_BYTE[spreading_factor]))
