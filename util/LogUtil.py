@@ -4,7 +4,7 @@ import os
 import time
 import parameters.Constants as Constants
 
-LOG_FILE_DIR = os.path.abspath(os.path.join('results', time.strftime("%Y%m%d-%H%M%S")))
+LOG_FILE_DIR = os.path.abspath(os.path.join('experiments', time.strftime("%Y%m%d-%H%M%S")))
 Constants.LOG_FILE_DIR = LOG_FILE_DIR
 
 FILE_LOGGER = {}
