@@ -28,13 +28,25 @@ def run():
     exponential = Exponential(exponential_size, exponential_scale)
 
     end_devices = EndDeviceDistributor.distribute(exponential)
+
+    run_lorawan_solution(end_devices)
+    run_proposed_solution(end_devices)
+
+    logger.info("<run> Simulation is ending...")
+
+
+def run_proposed_solution(end_devices):
     super_groups = SuperGroupGenerator.generate(end_devices)
     Results.SUPER_GROUPS = super_groups
 
     super_group_observers = __play_aggregated_acknowledge_scenario(super_groups)
     Results.SIMULATION_RESULT = __create_simulation_result(super_group_observers)
 
-    logger.info("<run> Simulation is ending...")
+
+def run_lorawan_solution(end_devices):
+    lorawan_groups = LorawanGroupGenerator.generate(end_devices)
+
+    LorawanObserver.start(lorawan_groups)
 
 
 def __play_aggregated_acknowledge_scenario(super_groups):

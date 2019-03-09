@@ -1,5 +1,7 @@
 from results.matchcase.SfGroupId import SfGroupId
 from results.model.GroupPayloadAnalysis import GroupPayloadAnalysis
+import util.ListUtil as ListUtil
+import parameters.Constants as Constants
 
 
 class FileToGroupPayloadAnalysis(object):
@@ -33,6 +35,14 @@ class FileToGroupPayloadAnalysis(object):
                     attempts.append(attempt)
                     current_payloads.append(current_payload)
                     maximum_payload_capacities.append(maximum_payload_capacity)
+
+            if len(attempts) == 0:
+                max_attemp = int( \
+                    Constants.SIMULATION_LIFE_TIME_IN_SECONDS / \
+                    Constants.SF_TO_SUPER_GROUP_PERIOD_IN_SEC.get(int(sf)))
+                attempts = [x for x in range(1, max_attemp+1)]
+                current_payloads = ListUtil.zero_list(max_attemp)
+                maximum_payload_capacities = ListUtil.zero_list(max_attemp)
 
             group_payload_analysis = \
                 GroupPayloadAnalysis(sf, group_id, attempts, current_payloads, maximum_payload_capacities)
