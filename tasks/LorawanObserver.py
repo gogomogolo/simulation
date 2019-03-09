@@ -2,29 +2,31 @@ import parameters.Constants as Constants
 import util.LorawanUtil as LorawanUtil
 import util.ProcessUtil as ProcessUtil
 import random
+from models.CommunicationState import CommunicationState
 
 
 observation_time = Constants.SIMULATION_LIFE_TIME_IN_SECONDS
 
 
 def start(lorawan_groups):
-    sf_to_time_slots_usage = {}
+    communication_history = []
+
     for sf in lorawan_groups:
         toa = __get_time_on_air(sf)
         devices_of_sf = lorawan_groups.get(sf)
         sf_time_slots_usage = __monitor_resource_usages(sf, toa, devices_of_sf)
-        sf_to_time_slots_usage[sf] = sf_time_slots_usage
+        communication_history += [CommunicationState(sf, toa, time_slot, sf_time_slots_usage.get(time_slot))
+                                  for time_slot in sf_time_slots_usage]
 
-    __find_acknowledged_transmissions(sf_to_time_slots_usage)
-    __find_unacknowledged_retransmissions(sf_to_time_slots_usage)
-    __find_collided_retransmissions(sf_to_time_slots_usage)
-    __find_idle_transmissions(sf_to_time_slots_usage)
+    __find_acknowledged_transmissions(communication_history)
+    __find_unacknowledged_retransmissions(communication_history)
+    __find_collided_retransmissions(communication_history)
+    __find_idle_transmissions(communication_history)
 
 
 def __monitor_resource_usages(sf, toa, lorawan_sf_devices):
-    lorawan_sf_devices_count = len(lorawan_sf_devices)
     used_resources = __find_used_time_slots(sf, toa, lorawan_sf_devices)
-    active_transmitters = __find_active_transmitters(sf, lorawan_sf_devices_count)
+    active_transmitters = __find_active_transmitters(sf, lorawan_sf_devices)
     resource_usage = __compose_resource_usages(used_resources, active_transmitters)
     return resource_usage
 
@@ -72,28 +74,24 @@ def __compose_resource_usages(used_resources, active_transmitters):
     return resource_usages
 
 
-def __find_acknowledged_transmissions(sf_to_time_slots_usage):
-    for sf in sf_to_time_slots_usage:
-        toa = __get_time_on_air(sf)
-        time_slot_usage = sf_to_time_slots_usage.get(sf)
+def __find_acknowledged_transmissions(communication_history):
+    for communication_status in communication_history:
+        a = 1
 
 
-def __find_unacknowledged_retransmissions(sf_to_time_slots_usage):
-    for sf in sf_to_time_slots_usage:
-        toa = __get_time_on_air(sf)
-        time_slot_usage = sf_to_time_slots_usage.get(sf)
+def __find_unacknowledged_retransmissions(communication_history):
+    for communication_status in communication_history:
+        a = 1
 
 
-def __find_collided_retransmissions(sf_to_time_slots_usage):
-    for sf in sf_to_time_slots_usage:
-        toa = __get_time_on_air(sf)
-        time_slot_usage = sf_to_time_slots_usage.get(sf)
+def __find_collided_retransmissions(communication_history):
+    for communication_status in communication_history:
+        a = 1
 
 
-def __find_idle_transmissions(sf_to_time_slots_usage):
-    for sf in sf_to_time_slots_usage:
-        toa = __get_time_on_air(sf)
-        time_slot_usage = sf_to_time_slots_usage.get(sf)
+def __find_idle_transmissions(communication_history):
+    for communication_status in communication_history:
+        a = 1
 
 
 def __find_time_slot(time_offset, time_period, time_on_air):

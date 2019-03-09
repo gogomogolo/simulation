@@ -3,9 +3,11 @@ import parameters.Results as Results
 import logging
 import sys
 import generators.SuperGroupObserverGenerator as SuperGroupObserverGenerator
+import generators.LorawanGroupGenerator as LorawanGroupGenerator
 import generators.SuperGroupGenerator as SuperGroupGenerator
 import generators.EndDeviceDistributor as EndDeviceDistributor
 import generators.SimulationResultGenerator as SimulationResultGenerator
+import tasks.LorawanObserver as LorawanObserver
 import threading
 
 from distributions.Exponential import Exponential
