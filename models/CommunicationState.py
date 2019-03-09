@@ -12,8 +12,8 @@ class CommunicationState(object):
         self.first_receive_window_time = float(toa * (time_slot + 1) + 1)
         self.first_receive_window_time_slot = int(float(toa * (time_slot + 1) + 1)/toa)
         self.second_receive_window_time = float(toa * (time_slot + 1) + 1) + self.get_time_on_air_for_receiving_messages(sf)
-        self.second_receive_window_time_slot = int(float(toa * (time_slot + 1) + 1) +
-                                                     self.get_time_on_air_for_receiving_messages(sf))/toa
+        self.second_receive_window_time_slot = int((float(toa * (time_slot + 1) + 1) +
+                                                     self.get_time_on_air_for_receiving_messages(sf))/toa)
         self.is_collision = len(end_devices) > 1
 
     def get_time_on_air_for_receiving_messages(self, sf):

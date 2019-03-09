@@ -18,6 +18,8 @@ def start(lorawan_groups):
         communication_history += [CommunicationState(sf, toa, time_slot, sf_time_slots_usage.get(time_slot))
                                   for time_slot in sf_time_slots_usage]
 
+    communication_history.sort(key=lambda communication_status: communication_status.transmission_time, reverse=False)
+
     __find_acknowledged_transmissions(communication_history)
     __find_unacknowledged_retransmissions(communication_history)
     __find_collided_retransmissions(communication_history)
