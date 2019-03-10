@@ -20,9 +20,9 @@ def start(lorawan_groups):
 
     communication_history.sort(key=lambda communication_status: communication_status.transmission_time, reverse=False)
 
-    __find_acknowledged_transmissions(communication_history)
-    __find_unacknowledged_retransmissions(communication_history)
-    __find_collided_retransmissions(communication_history)
+    acknowledged_communications = __find_acknowledged_transmissions(communication_history)
+    unacknowledged_communications = __find_unacknowledged_retransmissions(communication_history)
+    collided_communications = __find_collided_retransmissions(communication_history)
     __find_idle_transmissions(communication_history)
 
 
@@ -37,8 +37,7 @@ def __find_used_time_slots(sf, toa, lorawan_sf_devices):
     time_slots = []
     lorawan_sf_devices_count = len(lorawan_sf_devices)
     time_slot_number = int(Constants.SIMULATION_LIFE_TIME_IN_SECONDS/toa)
-    active_transmitters_count = \
-        ProcessUtil.calculate_active_transmitters_of_group(sf, lorawan_sf_devices_count)
+    active_transmitters_count = lorawan_sf_devices_count
     for i in range(0, active_transmitters_count):
         time_slots.append(random.randint(0, time_slot_number - 1))
     return time_slots
@@ -46,8 +45,7 @@ def __find_used_time_slots(sf, toa, lorawan_sf_devices):
 
 def __find_active_transmitters(sf, lorawan_sf_devices):
     lorawan_sf_devices_count = len(lorawan_sf_devices)
-    active_transmitters_amount = \
-        ProcessUtil.calculate_active_transmitters_of_group(sf, lorawan_sf_devices_count)
+    active_transmitters_amount = lorawan_sf_devices_count
     active_transmitters_indexes = \
         __select_active_transmitters_index(active_transmitters_amount, lorawan_sf_devices_count)
     active_transmitters = []
@@ -61,7 +59,7 @@ def __select_active_transmitters_index(active_transmitters_amount, lorawan_sf_de
     _random = random.Random()
     seed = _random.randint(1, 30000)
     _random.seed(seed)
-    indexes = _random.sample(range(0, lorawan_sf_devices_count - 1), active_transmitters_amount)
+    indexes = _random.sample(range(0, lorawan_sf_devices_count), active_transmitters_amount)
     indexes.sort(reverse=True)
     return indexes
 
@@ -77,18 +75,47 @@ def __compose_resource_usages(used_resources, active_transmitters):
 
 
 def __find_acknowledged_transmissions(communication_history):
+    valid_after_transmission_time = 0
+    acknowledged_communications = []
     for communication_status in communication_history:
-        a = 1
+        if communication_status.is_collision is False and\
+                communication_status.second_receive_window_time >= valid_after_transmission_time:
+            valid_after_transmission_time = communication_status.second_receive_window_time + \
+                                             (communication_status.receiving_message_toa * float(100/Constants.DUTY_CYCLE_IN_PERCENTAGE))
+            acknowledged_communications.append(communication_status)
+
+    return acknowledged_communications
 
 
 def __find_unacknowledged_retransmissions(communication_history):
+    valid_after_transmission_time = 0
+    valid_transmission_time = 0
+    unacknowledged_communications = []
+
     for communication_status in communication_history:
-        a = 1
+        if communication_status.is_collision is True:
+            continue
+
+        if communication_status.second_receive_window_time >= valid_after_transmission_time:
+            valid_transmission_time = communication_status.second_receive_window_time
+            valid_after_transmission_time = communication_status.second_receive_window_time + \
+                                             (communication_status.receiving_message_toa * float(100/Constants.DUTY_CYCLE_IN_PERCENTAGE))
+
+        elif communication_status.second_receive_window_time > valid_transmission_time and \
+                communication_status.second_receive_window_time < valid_after_transmission_time:
+            unacknowledged_communications.append(communication_status)
+
+    return unacknowledged_communications
 
 
 def __find_collided_retransmissions(communication_history):
+    collided_communications = []
+
     for communication_status in communication_history:
-        a = 1
+        if communication_status.is_collision is True:
+            collided_communications.append(communication_status)
+
+    return collided_communications
 
 
 def __find_idle_transmissions(communication_history):
