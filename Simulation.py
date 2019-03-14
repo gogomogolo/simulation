@@ -5,7 +5,7 @@ import processors.FileProcessor as FileProcessor
 import processors.DrawProcessor as DrawProcessor
 import util.LogUtil as LogUtil
 
-END_DEVICE_NUMBER = 15000
+END_DEVICE_NUMBER = 5000
 
 MIN_SF = 7
 MAX_SF = 12

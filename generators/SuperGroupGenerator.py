@@ -6,6 +6,8 @@ import util.LogUtil as LogUtil
 from models.Group import Group
 from models.SuperGroup import SuperGroup
 
+import random
+
 
 def generate(end_devices):
     sf_to_end_devices = __create_sf_to_end_devices(end_devices)
@@ -46,6 +48,7 @@ def __create_super_groups(sf_to_end_devices):
 
 def __fill_and_log(super_groups, toa, sf, sf_to_end_devices, group_period_in_seconds, group_period_with_delay_in_seconds):
     super_group_period_in_seconds = Constants.SF_TO_SUPER_GROUP_PERIOD_IN_SEC.get(sf)
+    attempt_count = int(Constants.SIMULATION_LIFE_TIME_IN_SECONDS / super_group_period_in_seconds)
 
     group_number_in_super_group = \
         ProcessUtil.calculate_group_number_in_super_group(super_group_period_in_seconds,
@@ -55,6 +58,7 @@ def __fill_and_log(super_groups, toa, sf, sf_to_end_devices, group_period_in_sec
     time_slot_in_upper_link = ProcessUtil.calculate_time_slot_in_group_ul(toa)
 
     group_id_to_end_devices = __create_group_id_to_end_devices(sf_to_end_devices[sf], group_id_length_in_bits)
+    __distribute_transmission_attempt(group_id_to_end_devices, attempt_count)
     super_group = __create_super_group(group_id_to_end_devices, sf, toa,
                                        time_slot_in_upper_link, group_period_in_seconds)
 
@@ -66,6 +70,28 @@ def __fill_and_log(super_groups, toa, sf, sf_to_end_devices, group_period_in_sec
         '| <GroupPeriodWithDelaySec> : %s | <GroupNumber> : %s |',
         str(sf), str(len(sf_to_end_devices[sf])), str(super_group_period_in_seconds),
         str(group_period_in_seconds), str(group_period_with_delay_in_seconds), str(exact_group_number))
+
+
+def __distribute_transmission_attempt(group_id_to_end_devices, attempt_count):
+
+    for gid in group_id_to_end_devices:
+        _random = random.Random()
+        seed = _random.randint(1, 30000)
+        _random.seed(seed)
+
+        devices = group_id_to_end_devices.get(gid)
+        uniform_transmission_attempt = {attempt: int(len(devices)/attempt_count) for attempt in range(1, attempt_count+1)}
+        excluded_attempt = []
+        for device in devices:
+            if len(excluded_attempt) != attempt_count:
+                attempt = _random.sample([x for x in range(1, attempt_count + 1) if x not in excluded_attempt], 1)[0]
+                uniform_transmission_attempt[attempt] = uniform_transmission_attempt.get(attempt)-1
+                device.set_transmitting_attempt(attempt)
+                if uniform_transmission_attempt[attempt] == 0:
+                    excluded_attempt.append(attempt)
+            else:
+                attempt = _random.randint(1, attempt_count)
+                device.set_transmitting_attempt(attempt)
 
 
 def __create_sf_to_end_devices(end_devices):
