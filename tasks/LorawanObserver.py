@@ -6,6 +6,10 @@ from models.CommunicationState import CommunicationState
 
 
 observation_time = Constants.SIMULATION_LIFE_TIME_IN_SECONDS
+observation_start_time = 0
+succeeded_communications = []
+failed_communications = []
+weird_communications = []
 
 
 def start(lorawan_groups):
@@ -18,12 +22,11 @@ def start(lorawan_groups):
         communication_history += [CommunicationState(sf, toa, time_slot, sf_time_slots_usage.get(time_slot))
                                   for time_slot in sf_time_slots_usage]
 
-    communication_history.sort(key=lambda communication_status: communication_status.transmission_time, reverse=False)
+    communication_history.sort(key=lambda communication_status: communication_status.first_receive_window_time, reverse=False)
 
-    acknowledged_communications = __find_acknowledged_transmissions(communication_history)
-    unacknowledged_communications = __find_unacknowledged_retransmissions(communication_history)
-    collided_communications = __find_collided_retransmissions(communication_history)
-    __find_idle_transmissions(communication_history)
+    __tag_communication_state(communication_history)
+
+    a = 1
 
 
 def __monitor_resource_usages(sf, toa, lorawan_sf_devices):
@@ -36,7 +39,7 @@ def __monitor_resource_usages(sf, toa, lorawan_sf_devices):
 def __find_used_time_slots(sf, toa, lorawan_sf_devices):
     time_slots = []
     lorawan_sf_devices_count = len(lorawan_sf_devices)
-    time_slot_number = int(Constants.SIMULATION_LIFE_TIME_IN_SECONDS/toa)
+    time_slot_number = int(observation_time/toa)
     active_transmitters_count = lorawan_sf_devices_count
     for i in range(0, active_transmitters_count):
         time_slots.append(random.randint(0, time_slot_number - 1))
@@ -74,54 +77,91 @@ def __compose_resource_usages(used_resources, active_transmitters):
     return resource_usages
 
 
-def __find_acknowledged_transmissions(communication_history):
-    valid_after_transmission_time = 0
-    acknowledged_communications = []
-    for communication_status in communication_history:
-        if communication_status.is_collision is False and\
-                communication_status.second_receive_window_time >= valid_after_transmission_time:
-            valid_after_transmission_time = communication_status.second_receive_window_time + \
-                                             (communication_status.receiving_message_toa * float(100/Constants.DUTY_CYCLE_IN_PERCENTAGE))
-            acknowledged_communications.append(communication_status)
+def __tag_communication_state(communication_history):
+    gateway_active_timestamp = 0
+    gateway_passive_timestamp = 0
 
-    return acknowledged_communications
+    gateway_transmission_start_time = 0
+    gateway_transmission_end_time = 0
 
+    global failed_communications
+    global succeeded_communications
+    global weird_communications
 
-def __find_unacknowledged_retransmissions(communication_history):
-    valid_after_transmission_time = 0
-    valid_transmission_time = 0
-    unacknowledged_communications = []
+    failed_communications = []
+    last_succeeded_communication_index = -1
+    communication_index = -1
 
     for communication_status in communication_history:
         if communication_status.is_collision is True:
-            continue
+            failed_communications.append(communication_status)
 
-        if communication_status.second_receive_window_time >= valid_after_transmission_time:
-            valid_transmission_time = communication_status.second_receive_window_time
-            valid_after_transmission_time = communication_status.second_receive_window_time + \
-                                             (communication_status.receiving_message_toa * float(100/Constants.DUTY_CYCLE_IN_PERCENTAGE))
+        else:
+            # Communication channel is bidirectional so if there is an UL channel between gw and ed,
+            # DL channel should not be connected between them or vice versa.
+            if __channel_transmission_state(gateway_transmission_start_time,
+                                            gateway_transmission_end_time,
+                                            communication_status.transmission_time) \
+                    == "DL_ACTIVE_UL_CONTROL_NEEDLESS":
 
-        elif communication_status.second_receive_window_time > valid_transmission_time and \
-                communication_status.second_receive_window_time < valid_after_transmission_time:
-            unacknowledged_communications.append(communication_status)
+                failed_communications.append(communication_status)
 
-    return unacknowledged_communications
+            elif __channel_transmission_state(gateway_transmission_start_time,
+                                              gateway_transmission_end_time,
+                                              communication_status.transmission_time) \
+                    == "DL_WILL_BE_ACTIVE_UL_CONTROL_NEEDED":
+                if communication_status.end_of_transmission_time >= gateway_transmission_start_time:
+                    failed_communications.append(communication_status)
+                else:
+                    if gateway_transmission_start_time <= communication_status.first_receive_window_time <= gateway_transmission_end_time:
+                        receiving_message_end_time = communication_status.first_receive_window_time + communication_status.receiving_message_toa
+                        if receiving_message_end_time > gateway_transmission_end_time:
+                            gateway_transmission_end_time = receiving_message_end_time
+
+                            gateway_transmission_duration_time = gateway_transmission_end_time - gateway_transmission_start_time
+
+                            gateway_passive_timestamp = gateway_transmission_end_time
+                            gateway_active_timestamp = gateway_transmission_start_time + \
+                                                       (gateway_transmission_duration_time * float(
+                                                           100 / Constants.DUTY_CYCLE_IN_PERCENTAGE))
+                        succeeded_communications.append(communication_status)
+                        last_succeeded_communication_index += 1
+                    else:
+                        failed_communications.append(communication_status)
+
+            elif __channel_transmission_state(gateway_transmission_start_time,
+                                              gateway_transmission_end_time,
+                                              communication_status.transmission_time) \
+                    == "DL_PASSIVE_DL_DUTY_CYCLE_CONTROL_NEEDED":
+                if gateway_passive_timestamp < communication_status.second_receive_window_time < gateway_active_timestamp:
+                    failed_communications.append(communication_status)
+                else:
+                    if communication_status.first_receive_window_time > gateway_active_timestamp:
+                        gateway_transmission_start_time = communication_status.first_receive_window_time
+                    else:
+                        gateway_transmission_start_time = communication_status.second_receive_window_time
+
+                    gateway_transmission_end_time = gateway_transmission_start_time + communication_status.receiving_message_toa
+
+                    gateway_passive_timestamp = gateway_transmission_end_time
+                    gateway_active_timestamp = gateway_transmission_start_time + \
+                                               (communication_status.receiving_message_toa * float(
+                                                   100 / Constants.DUTY_CYCLE_IN_PERCENTAGE))
+                    succeeded_communications.append(communication_status)
+                    last_succeeded_communication_index += 1
+
+        communication_index += 1
 
 
-def __find_collided_retransmissions(communication_history):
-    collided_communications = []
+def __channel_transmission_state(gw_tstart_t, gw_tend_t, ed_tstart_t):
 
-    for communication_status in communication_history:
-        if communication_status.is_collision is True:
-            collided_communications.append(communication_status)
-
-    return collided_communications
-
-
-def __find_idle_transmissions(communication_history):
-    for communication_status in communication_history:
-        a = 1
-
+    if gw_tstart_t <= ed_tstart_t <= gw_tend_t:
+        ed_ts = "DL_ACTIVE_UL_CONTROL_NEEDLESS"
+    elif ed_tstart_t < gw_tstart_t:
+        ed_ts = "DL_WILL_BE_ACTIVE_UL_CONTROL_NEEDED"
+    elif gw_tend_t < ed_tstart_t:
+        ed_ts = "DL_PASSIVE_DL_DUTY_CYCLE_CONTROL_NEEDED"
+    return ed_ts
 
 def __find_time_slot(time_offset, time_period, time_on_air):
     return float(time_offset+time_period)/time_on_air

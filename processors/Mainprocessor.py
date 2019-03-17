@@ -25,16 +25,21 @@ logger.setLevel(logging.DEBUG)
 def run():
     logger.info("<run> Simulation is starting...")
 
+    end_devices = create_end_devices()
+
+    run_lorawan_solution(end_devices)
+
+    run_proposed_solution(end_devices)
+
+    logger.info("<run> Simulation is ending...")
+
+
+def create_end_devices():
     exponential_size = Constants.EXPONENTIAL_DIST_SIZE
     exponential_scale = Constants.EXPONENTIAL_DIST_SCALE
     exponential = Exponential(exponential_size, exponential_scale)
 
-    end_devices = EndDeviceDistributor.distribute(exponential)
-
-    run_lorawan_solution(end_devices)
-    run_proposed_solution(end_devices)
-
-    logger.info("<run> Simulation is ending...")
+    return EndDeviceDistributor.distribute(exponential)
 
 
 def run_proposed_solution(end_devices):

@@ -10,6 +10,7 @@ class CommunicationState(object):
 
         self.transmitted_message_toa = transmitted_message_toa
         self.transmission_time = float(transmitted_message_toa * time_slot)
+        self.end_of_transmission_time = float(transmitted_message_toa * time_slot) + transmitted_message_toa
         self.transmission_time_slot = time_slot
 
         self.receiving_message_toa = self.get_time_on_air_for_receiving_messages(sf)
