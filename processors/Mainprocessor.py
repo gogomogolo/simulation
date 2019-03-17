@@ -27,7 +27,7 @@ def run():
 
     end_devices = create_end_devices()
 
-    run_lorawan_solution(end_devices)
+    run_lorawan_solution(end_devices.copy())
 
     run_proposed_solution(end_devices)
 
@@ -53,7 +53,9 @@ def run_proposed_solution(end_devices):
 def run_lorawan_solution(end_devices):
     lorawan_groups = LorawanGroupGenerator.generate(end_devices)
 
-    LorawanObserver.start(lorawan_groups)
+    result = LorawanObserver.start(lorawan_groups)
+
+    a = 0
 
 
 def __play_aggregated_acknowledge_scenario(super_groups):

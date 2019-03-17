@@ -5,6 +5,7 @@ class EndDevice(object):
         self.transmission_status = "NONE"
         self.transmitting_attempt = 0
         self.retransmitting_attempt = 0
+        self.retransmission_attempt_count = 0
 
     def set_transmission_status(self, status):
         self.transmission_status = status
@@ -14,3 +15,9 @@ class EndDevice(object):
 
     def set_retransmitting_attempt(self, attempt):
         self.retransmitting_attempt = attempt
+
+    def increment_retransmission_attempt_count(self):
+        self.retransmission_attempt_count += 1
+
+    def is_banned(self):
+        return self.retransmission_attempt_count == 15

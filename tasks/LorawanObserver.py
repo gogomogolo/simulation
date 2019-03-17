@@ -3,40 +3,143 @@ import util.LorawanUtil as LorawanUtil
 import util.ProcessUtil as ProcessUtil
 import random
 from models.CommunicationState import CommunicationState
+from models.LorawanResults import LorawanResults
 
 
-observation_time = Constants.SIMULATION_LIFE_TIME_IN_SECONDS
+observation_time = 0
 observation_start_time = 0
 succeeded_communications = []
 failed_communications = []
-weird_communications = []
+banned_devices = []
+failed_devices = []
+
+recursion_count = 0
 
 
 def start(lorawan_groups):
+    global observation_time
+    global succeeded_communications
+    global banned_devices
+    global failed_devices
+
+    observation = True
+    observation_time = Constants.SIMULATION_LIFE_TIME_IN_SECONDS
+    counter = 0
+    previous_observation_time = 0
+
+    while observation:
+        if previous_observation_time == observation_time:
+            counter += 1
+        else:
+            counter = 0
+        previous_observation_time = observation_time
+        lorawan_groups = __communicate(lorawan_groups)
+        if counter == 50:
+            observation = False
+
+    return LorawanResults([ed for com in succeeded_communications for ed in com.end_devices], failed_devices, banned_devices)
+
+
+def __communicate(lorawan_groups):
+    global observation_start_time
+    global observation_time
+    global succeeded_communications
+    global failed_communications
+    global banned_devices
+    global failed_devices
+
+    if observation_time <= 0:
+        return {}
+
     communication_history = []
+    failed_communications = []
 
     for sf in lorawan_groups:
         toa = __get_time_on_air(sf)
         devices_of_sf = lorawan_groups.get(sf)
-        sf_time_slots_usage = __monitor_resource_usages(sf, toa, devices_of_sf)
-        communication_history += [CommunicationState(sf, toa, time_slot, sf_time_slots_usage.get(time_slot))
+        if observation_time < toa:
+            failed_devices += devices_of_sf
+            continue
+        sf_time_slots_usage = __monitor_resource_usages(toa, devices_of_sf)
+        communication_history += [CommunicationState(sf, toa, time_slot, observation_start_time, sf_time_slots_usage.get(time_slot))
                                   for time_slot in sf_time_slots_usage]
 
-    communication_history.sort(key=lambda communication_status: communication_status.first_receive_window_time, reverse=False)
+    communication_history.sort(key=lambda communication_status: communication_status.first_receive_window_time,
+                               reverse=False)
 
-    __tag_communication_state(communication_history)
+    if communication_history == []:
+        return {}
 
-    a = 1
+    status_ok_transmissions = __tag_communication_state(communication_history)
+    succeeded_communications += status_ok_transmissions
+
+    total_communications_num = len(status_ok_transmissions) + len(failed_communications)
+
+    if total_communications_num == len(communication_history):
+        if len(status_ok_transmissions) == len(communication_history):
+            lorawan_groups = {}
+        else:
+            communication_state = communication_history[total_communications_num - 1]
+
+            observation_start_time = communication_state.transmission_time
+            observation_time = Constants.SIMULATION_LIFE_TIME_IN_SECONDS - observation_start_time
+
+            lorawan_groups = __create_lorawan_groups(communication_history[total_communications_num:])
+    elif 0 < total_communications_num < len(communication_history):
+        communication_state = communication_history[total_communications_num]
+
+        observation_start_time = communication_state.transmission_time
+        observation_time = Constants.SIMULATION_LIFE_TIME_IN_SECONDS - observation_start_time
+
+        lorawan_groups = __create_lorawan_groups(communication_history[total_communications_num:])
+
+    elif 0 == total_communications_num:
+        lorawan_groups = {}
+
+    return lorawan_groups
 
 
-def __monitor_resource_usages(sf, toa, lorawan_sf_devices):
-    used_resources = __find_used_time_slots(sf, toa, lorawan_sf_devices)
-    active_transmitters = __find_active_transmitters(sf, lorawan_sf_devices)
+def __create_lorawan_groups(communication_history):
+    global failed_communications
+    global banned_devices
+
+    lorawan_groups = {}
+
+    for failed_communication in failed_communications:
+        sf = failed_communication.sf
+        end_devices = failed_communication.end_devices
+
+        for end_device in end_devices:
+            end_device.increment_retransmission_attempt_count()
+            if end_device.is_banned():
+                banned_devices.append(end_device)
+            else:
+                if lorawan_groups.get(sf) is None:
+                    lorawan_groups[sf] = [end_device]
+                else:
+                    lorawan_groups[sf].append(end_device)
+
+    for communication_state in communication_history:
+        sf = communication_state.sf
+
+        if lorawan_groups.get(sf) is None:
+            lorawan_groups[sf] = communication_state.end_devices
+        else:
+            lorawan_groups[sf] += communication_state.end_devices
+
+    return lorawan_groups
+
+
+def __monitor_resource_usages(toa, lorawan_sf_devices):
+    used_resources = __find_used_time_slots(toa, lorawan_sf_devices)
+    active_transmitters = __find_active_transmitters(lorawan_sf_devices)
     resource_usage = __compose_resource_usages(used_resources, active_transmitters)
     return resource_usage
 
 
-def __find_used_time_slots(sf, toa, lorawan_sf_devices):
+def __find_used_time_slots(toa, lorawan_sf_devices):
+    global observation_time
+
     time_slots = []
     lorawan_sf_devices_count = len(lorawan_sf_devices)
     time_slot_number = int(observation_time/toa)
@@ -46,7 +149,7 @@ def __find_used_time_slots(sf, toa, lorawan_sf_devices):
     return time_slots
 
 
-def __find_active_transmitters(sf, lorawan_sf_devices):
+def __find_active_transmitters(lorawan_sf_devices):
     lorawan_sf_devices_count = len(lorawan_sf_devices)
     active_transmitters_amount = lorawan_sf_devices_count
     active_transmitters_indexes = \
@@ -85,15 +188,18 @@ def __tag_communication_state(communication_history):
     gateway_transmission_end_time = 0
 
     global failed_communications
-    global succeeded_communications
-    global weird_communications
 
     failed_communications = []
-    last_succeeded_communication_index = -1
-    communication_index = -1
+
+    ok = []
+
+    first_failed_transmission_detector = False
+    succeeded_transmission_after_first_failure = False
 
     for communication_status in communication_history:
         if communication_status.is_collision is True:
+            if first_failed_transmission_detector is not True:
+                first_failed_transmission_detector = True
             failed_communications.append(communication_status)
 
         else:
@@ -103,7 +209,8 @@ def __tag_communication_state(communication_history):
                                             gateway_transmission_end_time,
                                             communication_status.transmission_time) \
                     == "DL_ACTIVE_UL_CONTROL_NEEDLESS":
-
+                if first_failed_transmission_detector is not True:
+                    first_failed_transmission_detector = True
                 failed_communications.append(communication_status)
 
             elif __channel_transmission_state(gateway_transmission_start_time,
@@ -111,6 +218,8 @@ def __tag_communication_state(communication_history):
                                               communication_status.transmission_time) \
                     == "DL_WILL_BE_ACTIVE_UL_CONTROL_NEEDED":
                 if communication_status.end_of_transmission_time >= gateway_transmission_start_time:
+                    if first_failed_transmission_detector is not True:
+                        first_failed_transmission_detector = True
                     failed_communications.append(communication_status)
                 else:
                     if gateway_transmission_start_time <= communication_status.first_receive_window_time <= gateway_transmission_end_time:
@@ -124,9 +233,13 @@ def __tag_communication_state(communication_history):
                             gateway_active_timestamp = gateway_transmission_start_time + \
                                                        (gateway_transmission_duration_time * float(
                                                            100 / Constants.DUTY_CYCLE_IN_PERCENTAGE))
-                        succeeded_communications.append(communication_status)
-                        last_succeeded_communication_index += 1
+                        if first_failed_transmission_detector is True:
+                            succeeded_transmission_after_first_failure = True
+                        if succeeded_transmission_after_first_failure is not True:
+                            ok.append(communication_status)
                     else:
+                        if first_failed_transmission_detector is not True:
+                            first_failed_transmission_detector = True
                         failed_communications.append(communication_status)
 
             elif __channel_transmission_state(gateway_transmission_start_time,
@@ -134,6 +247,8 @@ def __tag_communication_state(communication_history):
                                               communication_status.transmission_time) \
                     == "DL_PASSIVE_DL_DUTY_CYCLE_CONTROL_NEEDED":
                 if gateway_passive_timestamp < communication_status.second_receive_window_time < gateway_active_timestamp:
+                    if first_failed_transmission_detector is not True:
+                        first_failed_transmission_detector = True
                     failed_communications.append(communication_status)
                 else:
                     if communication_status.first_receive_window_time > gateway_active_timestamp:
@@ -147,10 +262,15 @@ def __tag_communication_state(communication_history):
                     gateway_active_timestamp = gateway_transmission_start_time + \
                                                (communication_status.receiving_message_toa * float(
                                                    100 / Constants.DUTY_CYCLE_IN_PERCENTAGE))
-                    succeeded_communications.append(communication_status)
-                    last_succeeded_communication_index += 1
+                    if first_failed_transmission_detector is True:
+                        succeeded_transmission_after_first_failure = True
+                    if succeeded_transmission_after_first_failure is not True:
+                        ok.append(communication_status)
 
-        communication_index += 1
+        if succeeded_transmission_after_first_failure is True:
+            break
+
+    return ok
 
 
 def __channel_transmission_state(gw_tstart_t, gw_tend_t, ed_tstart_t):
@@ -162,6 +282,7 @@ def __channel_transmission_state(gw_tstart_t, gw_tend_t, ed_tstart_t):
     elif gw_tend_t < ed_tstart_t:
         ed_ts = "DL_PASSIVE_DL_DUTY_CYCLE_CONTROL_NEEDED"
     return ed_ts
+
 
 def __find_time_slot(time_offset, time_period, time_on_air):
     return float(time_offset+time_period)/time_on_air
