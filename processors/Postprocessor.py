@@ -272,13 +272,21 @@ def flush():
         for lifecycle_group in lifecycles:
             lifecycle = getattr(lifecycle_group, "_AttemptSuperGroup__cycle")
             gid_ack = getattr(lifecycle_group, "_AttemptSuperGroup__group_id_to_aggregated_acknowledgement")
+            gid_tc = getattr(lifecycle_group, "_AttemptSuperGroup__group_id_to_transmission_count")
             for gid in gid_ack:
                 ack = gid_ack[gid]
+                tc = gid_tc[gid]
                 payload_in_byte = 0
+                message_in_byte = 0
                 if ack is not None:
-                    payload_in_byte = (len(list(ack)*len(list(ack)[0]))/4)
+                    #payload_in_byte = (len(list(ack)*len(list(ack)[0]))/4)
+                    payload_in_byte = len(list(ack)*len(list(ack)[0]))/8
+                    message_in_byte = 13 + payload_in_byte
                 LogUtil.get_file_logger(__name__).info(
                     "| <Attempt> : %s | <SF> : %s | <GroupId> : %s "
-                    "| <MacPayloadByte> : %s | <MaxBoundaryMacPayload> : %s |",
+                    "| <MacPayloadByte> : %s | <MaxBoundaryMacPayload> : %s |"
+                    "| <TotalDLMessageSizeByte> : %s | <TotalULTransmission> : %s |"
+                    "| <TotalULMessageSizeByte> : %s |",
                     str(lifecycle+1), str(spreading_factor), str(gid),
-                    str(payload_in_byte), str(Constants.SF_TO_MAX_MAC_PAYLOAD_IN_BYTE[spreading_factor]))
+                    str(payload_in_byte), str(Constants.SF_TO_MAX_MAC_PAYLOAD_IN_BYTE[spreading_factor]),
+                    str(message_in_byte), str(tc), str(tc*(13+Constants.SF_TO_MAX_MAC_PAYLOAD_IN_BYTE[spreading_factor])))

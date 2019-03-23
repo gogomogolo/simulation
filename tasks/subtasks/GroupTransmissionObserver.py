@@ -12,6 +12,8 @@ class GroupTransmissionObserver(object):
         self.__attempt = 1
         self.__idle_transmitters = []
         self.__successful_transmitters = []
+        self.__attempt_to_successful_transmitters = {}
+        self.__attempt_to_transmission_count = {}
         self.__failed_transmitters = []
         self.__random = random.Random()
         self.__seeds = []
@@ -37,6 +39,7 @@ class GroupTransmissionObserver(object):
         self.__attempt += 1
 
     def __update_transmissions_state(self, resource_usages):
+        transmission_count = 0
         for resource in resource_usages:
             resource_consumers = resource_usages[resource]
             if self.__is_collision(resource_consumers):
@@ -44,6 +47,12 @@ class GroupTransmissionObserver(object):
                 self.__retransmission_devices(resource_consumers)
             else:
                 self.__update_devices_status(resource_consumers, "SUCCEEDED")
+                if self.__attempt_to_successful_transmitters.get(self.__attempt) is None:
+                    self.__attempt_to_successful_transmitters[self.__attempt] = [resource_consumers[0]]
+                else:
+                    self.__attempt_to_successful_transmitters[self.__attempt].append(resource_consumers[0])
+            transmission_count += len(resource_consumers)
+        self.__attempt_to_transmission_count[self.__attempt] = transmission_count
 
     def __is_collision(self, resource_consumers):
         return len(resource_consumers) > 1

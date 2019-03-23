@@ -27,9 +27,9 @@ def run():
 
     end_devices = create_end_devices()
 
-    run_lorawan_solution(end_devices.copy())
+    #run_lorawan_solution(end_devices.copy())
 
-    #run_proposed_solution(end_devices)
+    run_proposed_solution(end_devices)
 
     logger.info("<run> Simulation is ending...")
 
