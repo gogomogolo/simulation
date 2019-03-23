@@ -16,6 +16,10 @@ class CommunicationState(object):
         self.first_receive_window_time = observation_start_t + float(transmitted_message_toa * (time_slot + 1) + 1)
         self.second_receive_window_time = observation_start_t + float(transmitted_message_toa * (time_slot + 1) + 1) + self.receiving_message_toa
 
+        self.will_be_active_transmission_time = self.transmission_time + \
+                                              (transmitted_message_toa * float(
+                                            100 / Constants.DUTY_CYCLE_IN_PERCENTAGE))
+
     def get_time_on_air_for_receiving_messages(self, sf):
         return LorawanUtil.calculate_time_on_air(
             Constants.BANDWIDTH_IN_HERTZ,

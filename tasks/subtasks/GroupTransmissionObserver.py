@@ -55,6 +55,7 @@ class GroupTransmissionObserver(object):
     def __retransmission_devices(self, devices):
         for device in devices:
             device.set_retransmitting_attempt(self.__attempt)
+            device.increment_retransmission_attempt_count()
 
     def __monitor_resource_usages(self):
         active_transmitters = self.__find_active_transmitters()
@@ -72,7 +73,8 @@ class GroupTransmissionObserver(object):
         active_transmitters = []
         for device in self.__end_devices:
             if device.transmitting_attempt == self.__attempt and device.transmission_status != "SUCCEEDED":
-                active_transmitters.append(device)
+                if device.retransmission_attempt_count != 15:
+                    active_transmitters.append(device)
 
         return active_transmitters
 

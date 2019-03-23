@@ -29,7 +29,7 @@ def run():
 
     run_lorawan_solution(end_devices.copy())
 
-    run_proposed_solution(end_devices)
+    #run_proposed_solution(end_devices)
 
     logger.info("<run> Simulation is ending...")
 
@@ -55,7 +55,7 @@ def run_lorawan_solution(end_devices):
 
     result = LorawanObserver.start(lorawan_groups)
 
-    a = 0
+    a=0
 
 
 def __play_aggregated_acknowledge_scenario(super_groups):

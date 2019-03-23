@@ -12,6 +12,8 @@ succeeded_communications = []
 failed_communications = []
 banned_devices = []
 failed_devices = []
+out_of_simulation_devices = []
+failed_end_device_id_to_active_transmission_time = {}
 
 recursion_count = 0
 
@@ -21,6 +23,7 @@ def start(lorawan_groups):
     global succeeded_communications
     global banned_devices
     global failed_devices
+    global out_of_simulation_devices
 
     observation = True
     observation_time = Constants.SIMULATION_LIFE_TIME_IN_SECONDS
@@ -37,7 +40,7 @@ def start(lorawan_groups):
         if counter == 50:
             observation = False
 
-    return LorawanResults([ed for com in succeeded_communications for ed in com.end_devices], failed_devices, banned_devices)
+    return LorawanResults([ed for com in succeeded_communications for ed in com.end_devices], failed_devices, banned_devices, out_of_simulation_devices)
 
 
 def __communicate(lorawan_groups):
@@ -47,12 +50,12 @@ def __communicate(lorawan_groups):
     global failed_communications
     global banned_devices
     global failed_devices
+    global failed_end_device_id_to_active_transmission_time
 
     if observation_time <= 0:
         return {}
 
     communication_history = []
-    failed_communications = []
 
     for sf in lorawan_groups:
         toa = __get_time_on_air(sf)
@@ -66,6 +69,9 @@ def __communicate(lorawan_groups):
 
     communication_history.sort(key=lambda communication_status: communication_status.first_receive_window_time,
                                reverse=False)
+
+    failed_communications = []
+    failed_end_device_id_to_active_transmission_time = {}
 
     if communication_history == []:
         return {}
@@ -102,18 +108,27 @@ def __communicate(lorawan_groups):
 def __create_lorawan_groups(communication_history):
     global failed_communications
     global banned_devices
+    global out_of_simulation_devices
+    global failed_end_device_id_to_active_transmission_time
 
     lorawan_groups = {}
 
     for failed_communication in failed_communications:
+        will_be_active_transmission_time = failed_communication.will_be_active_transmission_time
         sf = failed_communication.sf
         end_devices = failed_communication.end_devices
+
+        if will_be_active_transmission_time >= Constants.SIMULATION_LIFE_TIME_IN_SECONDS:
+            out_of_simulation_devices += failed_communication.end_devices
+            continue
 
         for end_device in end_devices:
             end_device.increment_retransmission_attempt_count()
             if end_device.is_banned():
                 banned_devices.append(end_device)
             else:
+                failed_end_device_id_to_active_transmission_time[getattr(end_device, "_id")] = \
+                    failed_communication.will_be_active_transmission_time
                 if lorawan_groups.get(sf) is None:
                     lorawan_groups[sf] = [end_device]
                 else:
@@ -133,7 +148,7 @@ def __create_lorawan_groups(communication_history):
 def __monitor_resource_usages(toa, lorawan_sf_devices):
     used_resources = __find_used_time_slots(toa, lorawan_sf_devices)
     active_transmitters = __find_active_transmitters(lorawan_sf_devices)
-    resource_usage = __compose_resource_usages(used_resources, active_transmitters)
+    resource_usage = __compose_resource_usages(toa, used_resources, active_transmitters)
     return resource_usage
 
 
@@ -170,13 +185,32 @@ def __select_active_transmitters_index(active_transmitters_amount, lorawan_sf_de
     return indexes
 
 
-def __compose_resource_usages(used_resources, active_transmitters):
+def __compose_resource_usages(toa, used_resources, active_transmitters):
+    global observation_start_time
+    global observation_time
+    global failed_end_device_id_to_active_transmission_time
+
+    observation_start_time_slot = int(observation_start_time/toa)
+    time_slot_number = int(observation_time / toa)
+
     resource_usages = {}
     for index in range(0, len(used_resources)):
+        end_device = active_transmitters[index]
+        end_device_id = getattr(end_device, "_id")
+        if failed_end_device_id_to_active_transmission_time.get(end_device_id) is not None:
+            active_transmission_t = failed_end_device_id_to_active_transmission_time[end_device_id]
+            active_transmission_time_slot_number = int(active_transmission_t/toa)
+            given_time_slot = observation_start_time_slot + used_resources[index]
+            if active_transmission_time_slot_number > given_time_slot:
+                valid_start_time_slot = active_transmission_time_slot_number - observation_start_time_slot
+                if valid_start_time_slot > (time_slot_number - 1):
+                    used_resources[index] = (time_slot_number - 1)
+                else:
+                    used_resources[index] = random.randint(valid_start_time_slot, time_slot_number - 1)
         if resource_usages.get(used_resources[index]) is None:
-            resource_usages[used_resources[index]] = [active_transmitters[index]]
+            resource_usages[used_resources[index]] = [end_device]
         else:
-            resource_usages[used_resources[index]].append(active_transmitters[index])
+            resource_usages[used_resources[index]].append(end_device)
     return resource_usages
 
 
