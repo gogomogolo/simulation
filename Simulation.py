@@ -3,9 +3,10 @@ import processors.Mainprocessor as Mainprocessor
 import processors.Postprocessor as Postprocessor
 import processors.FileProcessor as FileProcessor
 import processors.DrawProcessor as DrawProcessor
+import processors.ShellProcessor as ShellProcessor
 import util.LogUtil as LogUtil
 
-END_DEVICE_NUMBER = 10000
+END_DEVICE_NUMBER = 1000
 
 MIN_SF = 7
 MAX_SF = 12
@@ -21,7 +22,7 @@ SUBSCRIPTION_ID_LENGTH_IN_BIT = 24
 BANDWIDTH_IN_HERTZ = 125000
 NUMBER_OF_PREAMBLE = 8
 SYNCHRONIZATION_WORD = 8
-SF_TO_MAC_PAYLOAD_IN_BYTE = {7: 250, 8: 250, 9: 123, 10: 59, 11: 59, 12: 59}
+SF_TO_MAC_PAYLOAD_IN_BYTE = {7: 10, 8: 10, 9: 10, 10: 10, 11: 10, 12: 10}
 SF_TO_RECEIVE_FRAME_MAC_PAYLOAD_IN_BYTE = {7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0}
 SF_TO_MAX_MAC_PAYLOAD_IN_BYTE = {7: 250, 8: 250, 9: 123, 10: 59, 11: 59, 12: 59}
 SF_TO_SUPER_GROUP_PERIOD_IN_SEC = {7: 3600, 8: 3600, 9: 3600, 10: 3600, 11: 3600, 12: 3600}
@@ -59,7 +60,9 @@ parameters = "\nEND_DEVICE_NUMBER = {END_DEVICE_NUMBER}\n" \
 
 LogUtil.get_file_logger('generators.SuperGroupGenerator')
 LogUtil.get_file_logger('processors.Postprocessor')
+LogUtil.get_file_logger('processors.ShellProcessor')
 LogUtil.get_file_logger('tasks.subtasks.GroupTransmissionObserver')
+LogUtil.get_file_logger('tasks.LorawanObserver')
 LogUtil.get_file_logger(__name__).info(parameters.format(
     END_DEVICE_NUMBER=END_DEVICE_NUMBER
     , MIN_SF=MIN_SF
@@ -114,6 +117,7 @@ group_analysis = FileProcessor.get_group_analysis(super_group_analysis)
 DrawProcessor.draw_group_states(group_analysis)
 DrawProcessor.draw_super_group_states(group_analysis)
 DrawProcessor.draw_total_all_transmission_states(group_analysis)
+ShellProcessor.get_report()
 
 
 

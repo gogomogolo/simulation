@@ -30,7 +30,7 @@ class FileToGroupPayloadAnalysis(object):
                     values = line.split(splitter)
                     attempt = int(values[1].split(':')[1].lstrip().rstrip())
                     current_payload = float(values[4].split(':')[1].lstrip().rstrip())
-                    maximum_payload_capacity = int(values[5].split(':')[1].lstrip().rstrip())
+                    maximum_payload_capacity = int(values[6].split(':')[1].lstrip().rstrip())
 
                     attempts.append(attempt)
                     current_payloads.append(current_payload)

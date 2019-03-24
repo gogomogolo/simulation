@@ -5,6 +5,8 @@ import random
 from models.CommunicationState import CommunicationState
 from models.LorawanResults import LorawanResults
 
+import util.LogUtil as LogUtil
+
 
 observation_time = 0
 observation_start_time = 0
@@ -40,7 +42,24 @@ def start(lorawan_groups):
         if counter == 50:
             observation = False
 
-    return LorawanResults([ed for com in succeeded_communications for ed in com.end_devices], failed_devices, banned_devices, out_of_simulation_devices)
+    lorawan_results = LorawanResults([ed for com in succeeded_communications for ed in com.end_devices], failed_devices, banned_devices, out_of_simulation_devices)
+
+    LogUtil.get_file_logger(__name__).info(
+                    "| <SucceededTransmitters> : %s | <FailedTransmitters> : %s | <BannedTransmitters> : %s "
+                    "| <TotalULTransmissionCount> : %s | <TotalDLTransmissionCount> : %s "
+                    "| <TotalULMessageSize> : %s | <TotalDLMessageSize> : %s |",
+                    str(len(lorawan_results.succeeded_t)), str(len(lorawan_results.out_of_simulation_t) + len(lorawan_results.failed_t)),
+                    str(len(lorawan_results.banned_t)),
+                    str(sum([ed.retransmission_attempt_count+1 for ed in lorawan_results.succeeded_t] +
+                            [ed.retransmission_attempt_count for ed in lorawan_results.banned_t] +
+                            [ed.retransmission_attempt_count for ed in lorawan_results.failed_t] +
+                            [ed.retransmission_attempt_count for ed in lorawan_results.out_of_simulation_t])),
+                    str(len(lorawan_results.succeeded_t)),
+                    str(sum([(ed.retransmission_attempt_count + 1)*(13+Constants.SF_TO_MAC_PAYLOAD_IN_BYTE[getattr(ed, "_sf")]) for ed in lorawan_results.succeeded_t] +
+                            [(ed.retransmission_attempt_count)*(13+Constants.SF_TO_MAC_PAYLOAD_IN_BYTE[getattr(ed, "_sf")]) for ed in lorawan_results.banned_t] +
+                            [(ed.retransmission_attempt_count)*(13+Constants.SF_TO_MAC_PAYLOAD_IN_BYTE[getattr(ed, "_sf")]) for ed in lorawan_results.failed_t] +
+                            [(ed.retransmission_attempt_count)*(13+Constants.SF_TO_MAC_PAYLOAD_IN_BYTE[getattr(ed, "_sf")]) for ed in lorawan_results.out_of_simulation_t])),
+                    str(13*len(lorawan_results.succeeded_t)))
 
 
 def __communicate(lorawan_groups):

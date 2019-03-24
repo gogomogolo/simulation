@@ -271,22 +271,39 @@ def flush():
         lifecycles = getattr(observation_group, "_ObservationGroup__lifecycles")
         for lifecycle_group in lifecycles:
             lifecycle = getattr(lifecycle_group, "_AttemptSuperGroup__cycle")
-            gid_ack = getattr(lifecycle_group, "_AttemptSuperGroup__group_id_to_aggregated_acknowledgement")
+            gid_ack_wo_bexpr = getattr(lifecycle_group,
+                              "_AttemptSuperGroup__group_id_to_aggregated_acknowledgement_without_bexpr")
+            gid_ack_w_bexpr = getattr(lifecycle_group,
+                              "_AttemptSuperGroup__group_id_to_aggregated_acknowledgement_with_bexpr")
             gid_tc = getattr(lifecycle_group, "_AttemptSuperGroup__group_id_to_transmission_count")
-            for gid in gid_ack:
-                ack = gid_ack[gid]
+            for gid in gid_ack_w_bexpr:
                 tc = gid_tc[gid]
-                payload_in_byte = 0
-                message_in_byte = 0
-                if ack is not None:
-                    #payload_in_byte = (len(list(ack)*len(list(ack)[0]))/4)
-                    payload_in_byte = len(list(ack)*len(list(ack)[0]))/8
-                    message_in_byte = 13 + payload_in_byte
+
+                ack_w_bexpr = gid_ack_w_bexpr[gid]
+                payload_in_byte_w_bexpr = 0
+                message_in_byte_w_bexpr = 0
+                if ack_w_bexpr is not None:
+                    payload_in_byte_w_bexpr = (len(list(ack_w_bexpr)*len(list(ack_w_bexpr)[0]))/4)
+                    if payload_in_byte_w_bexpr != 0:
+                        message_in_byte_w_bexpr = 13 + payload_in_byte_w_bexpr
+
+                ack_wo_bexpr = gid_ack_wo_bexpr[gid]
+                payload_in_byte_wo_bexpr = 0
+                message_in_byte_wo_bexpr = 0
+                if ack_wo_bexpr is not None:
+                    payload_in_byte_wo_bexpr = len(list(ack_wo_bexpr)*len(list(ack_wo_bexpr)[0]))/8
+                    if payload_in_byte_wo_bexpr != 0:
+                        message_in_byte_wo_bexpr = 13 + payload_in_byte_wo_bexpr
+
                 LogUtil.get_file_logger(__name__).info(
                     "| <Attempt> : %s | <SF> : %s | <GroupId> : %s "
-                    "| <MacPayloadByte> : %s | <MaxBoundaryMacPayload> : %s |"
-                    "| <TotalDLMessageSizeByte> : %s | <TotalULTransmission> : %s |"
+                    "| <MacPayloadByteWithExpressionSolution> : %s | <MacPayloadByteWithStandardSolution> : %s "
+                    "| <MaxBoundaryMacPayload> : %s "
+                    "| <DLMessageSizeByteWithExpressionSolution> : %s | <DLMessageSizeByteWithStandardSolution> : %s "
+                    "| <TotalULTransmission> : %s "
                     "| <TotalULMessageSizeByte> : %s |",
                     str(lifecycle+1), str(spreading_factor), str(gid),
-                    str(payload_in_byte), str(Constants.SF_TO_MAX_MAC_PAYLOAD_IN_BYTE[spreading_factor]),
-                    str(message_in_byte), str(tc), str(tc*(13+Constants.SF_TO_MAX_MAC_PAYLOAD_IN_BYTE[spreading_factor])))
+                    str(payload_in_byte_w_bexpr), str(payload_in_byte_wo_bexpr),
+                    str(Constants.SF_TO_MAX_MAC_PAYLOAD_IN_BYTE[spreading_factor]),
+                    str(message_in_byte_w_bexpr), str(message_in_byte_wo_bexpr),
+                    str(tc), str(tc*(13+Constants.SF_TO_MAC_PAYLOAD_IN_BYTE[spreading_factor])))
