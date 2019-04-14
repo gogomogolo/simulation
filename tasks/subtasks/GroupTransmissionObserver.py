@@ -63,7 +63,7 @@ class GroupTransmissionObserver(object):
 
     def __retransmission_devices(self, devices):
         for device in devices:
-            device.set_retransmitting_attempt(self.__attempt)
+            device.set_transmitting_attempt(self.__attempt+1)
             device.increment_retransmission_attempt_count()
 
     def __monitor_resource_usages(self):

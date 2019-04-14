@@ -9,6 +9,7 @@ import generators.EndDeviceDistributor as EndDeviceDistributor
 import generators.SimulationResultGenerator as SimulationResultGenerator
 import tasks.LorawanObserver as LorawanObserver
 import threading
+import copy
 
 from distributions.Exponential import Exponential
 
@@ -27,7 +28,7 @@ def run():
 
     end_devices = create_end_devices()
 
-    run_lorawan_solution(end_devices.copy())
+    run_lorawan_solution(copy.deepcopy(end_devices))
 
     run_proposed_solution(end_devices)
 
