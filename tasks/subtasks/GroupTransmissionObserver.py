@@ -82,7 +82,7 @@ class GroupTransmissionObserver(object):
         active_transmitters = []
         for device in self.__end_devices:
             if device.transmitting_attempt == self.__attempt and device.transmission_status != "SUCCEEDED":
-                if device.retransmission_attempt_count != 15:
+                if device.retransmission_attempt_count != 8:
                     active_transmitters.append(device)
 
         return active_transmitters

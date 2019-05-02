@@ -8,6 +8,7 @@ import generators.SuperGroupGenerator as SuperGroupGenerator
 import generators.EndDeviceDistributor as EndDeviceDistributor
 import generators.SimulationResultGenerator as SimulationResultGenerator
 import tasks.LorawanObserver as LorawanObserver
+import tasks.LorawanPureAlohaObserver as LorawanPureAlohaObserver
 import threading
 import copy
 
@@ -54,7 +55,7 @@ def run_proposed_solution(end_devices):
 def run_lorawan_solution(end_devices):
     lorawan_groups = LorawanGroupGenerator.generate(end_devices)
 
-    LorawanObserver.start(lorawan_groups)
+    LorawanPureAlohaObserver.start(lorawan_groups)
 
 
 def __play_aggregated_acknowledge_scenario(super_groups):
