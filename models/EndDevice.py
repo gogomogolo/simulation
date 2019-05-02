@@ -20,4 +20,4 @@ class EndDevice(object):
         self.retransmission_attempt_count += 1
 
     def is_banned(self):
-        return self.retransmission_attempt_count == 15
+        return self.retransmission_attempt_count == 8
