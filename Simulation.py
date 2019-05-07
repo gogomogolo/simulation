@@ -104,6 +104,7 @@ def simulation(SF_TO_MAC_PAYLOAD_IN_BYTE, END_DEVICE_NUMBER, SF_TO_SUPER_GROUP_P
         , SF_TO_ACTIVATION_PROB)
     Mainprocessor.run()
     Postprocessor.flush()
+    Postprocessor.networkLoad(Constants.LOG_FILE_DIR)
     ShellProcessor.get_report()
     mm.compareResultWithModel(Constants.LOG_FILE_DIR)
     simulation_results_dir = Constants.LOG_FILE_DIR

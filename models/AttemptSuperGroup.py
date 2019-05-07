@@ -23,6 +23,11 @@ class AttemptSuperGroup(object):
                 getattr(_observation_subgroup, "_GroupTransmissionObserver__attempt_to_transmission_count").get(self.__cycle+1)
             for _observation_subgroup in _observation_subgroups
         }
+        self.__group_id_to_successful_transmissions_not_cumulative = {
+            getattr(_observation_subgroup, "_GroupTransmissionObserver__group_id"):
+                len(self.__isNone(getattr(_observation_subgroup, "_GroupTransmissionObserver__attempt_to_successful_transmitters").get(self.__cycle+1)))
+            for _observation_subgroup in _observation_subgroups
+        }
         self.__group_id_to_successful_transmissions = {
             getattr(_observation_subgroup, "_GroupTransmissionObserver__group_id"):
             len(getattr(_observation_subgroup, "_GroupTransmissionObserver__successful_transmitters"))
@@ -64,3 +69,8 @@ class AttemptSuperGroup(object):
 
             qmc = QMC(end_device_ids)
             return qmc.minimize()
+
+    def __isNone(self, list):
+        if list is None:
+            return []
+        return list

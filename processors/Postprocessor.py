@@ -307,3 +307,27 @@ def flush():
                     str(Constants.SF_TO_MAX_MAC_PAYLOAD_IN_BYTE[spreading_factor]),
                     str(message_in_byte_w_bexpr), str(message_in_byte_wo_bexpr),
                     str(tc), str(tc*(13+Constants.SF_TO_MAC_PAYLOAD_IN_BYTE[spreading_factor])))
+
+def networkLoad(results_path):
+    observation_groups = getattr(Results.SIMULATION_RESULT, "_SimulationResult__observation_groups")
+    for observation_group in observation_groups:
+        sfgid_cycles_tc = {}
+        sfgid_cycles_stc = {}
+        spreading_factor = getattr(observation_group, "_ObservationGroup__sf")
+        lifecycles = getattr(observation_group, "_ObservationGroup__lifecycles")
+        for lifecycle_group in lifecycles:
+            lifecycle = getattr(lifecycle_group, "_AttemptSuperGroup__cycle")
+            gid_tc = getattr(lifecycle_group, "_AttemptSuperGroup__group_id_to_transmission_count")
+            gid_stc = getattr(lifecycle_group, "_AttemptSuperGroup__group_id_to_successful_transmissions_not_cumulative")
+            for gid in gid_tc:
+                tag = str(spreading_factor) + "|" + str(gid)
+                if sfgid_cycles_tc.get(tag) is None:
+                    sfgid_cycles_tc[tag] = [gid_tc.get(gid)]
+                    sfgid_cycles_stc[tag] = [gid_stc.get(gid)]
+                else:
+                    sfgid_cycles_tc[tag].append(gid_tc.get(gid))
+                    sfgid_cycles_stc[tag].append(gid_stc.get(gid))
+        with open(results_path + "/proposedsfidattemptpos", 'a') as the_file:
+            for sfgid in sfgid_cycles_tc:
+                the_file.write(str(sfgid) + " : " + str(sfgid_cycles_stc.get(sfgid)) + str('\n'))
+                the_file.write(str(sfgid) + " : " + str(sfgid_cycles_tc.get(sfgid))+ str('\n'))

@@ -19,17 +19,22 @@ def poisson(slot, iteration, transmissions):
 
 def totalTransmissionPerAttempt(probOfSucc, iteration, transmissions):
     if iteration == 0:
-        return float(transmissions[iteration]) * probOfSucc[iteration]
+        return float(transmissions[iteration])
     return transmissions[iteration] + (1 - probOfSucc[iteration - 1]) * totalTransmissionPerAttempt(probOfSucc,
                                                                                                     iteration - 1,
                                                                                                     transmissions)
 
 
-def succTranmissionCount(slot, transmissions):
+def succTranmissionCount(slot, transmissions, results_path, sfGroupIdPair):
     probOfSucc = [poisson(slot, i, transmissions) for i in range(0, len(transmissions))]
     totalTransmissionsPerAttempt = [totalTransmissionPerAttempt(probOfSucc, i, transmissions) for i in
                                     range(0, len(transmissions))]
     countOfSucc = [probOfSucc[i] * totalTransmissionsPerAttempt[i] for i in range(0, len(probOfSucc))]
+
+    with open(results_path + "/modelsfidattemptpos", 'a') as the_file:
+        the_file.write(str(sfGroupIdPair) + " : " + str(probOfSucc) + str('\n'))
+        the_file.write(str(sfGroupIdPair) + " : " + str(totalTransmissionsPerAttempt) + str('\n'))
+        the_file.write(str(sfGroupIdPair) + " : " + str(transmissions) + str('\n'))
 
     return sum(countOfSucc)
 
@@ -68,7 +73,7 @@ def compareResultWithModel(results_path):
         transmissions = [sfGroupIdIdleTransmittersAmount[i - 1] - sfGroupIdIdleTransmittersAmount[i] for i in
                          range(1, len(sfGroupIdIdleTransmittersAmount))]
 
-        succ = succTranmissionCount(sfGroupIdTimeSlotAmount, transmissions)
+        succ = succTranmissionCount(sfGroupIdTimeSlotAmount, transmissions, results_path, sfGroupIdPair)
 
         proposedSuccTransmitters += sfGroupIdSuccessfulTransmittersAmount
         modelSuccTransmitters += succ

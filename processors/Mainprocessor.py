@@ -7,7 +7,6 @@ import generators.LorawanGroupGenerator as LorawanGroupGenerator
 import generators.SuperGroupGenerator as SuperGroupGenerator
 import generators.EndDeviceDistributor as EndDeviceDistributor
 import generators.SimulationResultGenerator as SimulationResultGenerator
-import tasks.LorawanObserver as LorawanObserver
 import tasks.LorawanPureAlohaObserver as LorawanPureAlohaObserver
 import threading
 import copy
