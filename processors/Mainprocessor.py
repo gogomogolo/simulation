@@ -12,6 +12,7 @@ import threading
 import copy
 
 from distributions.Exponential import Exponential
+from distributions.Uniform import Uniform
 
 
 formatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
@@ -38,7 +39,9 @@ def run():
 def create_end_devices():
     exponential_size = Constants.EXPONENTIAL_DIST_SIZE
     exponential_scale = Constants.EXPONENTIAL_DIST_SCALE
+
     exponential = Exponential(exponential_size, exponential_scale)
+    #uniform = Uniform(exponential_size)
 
     return EndDeviceDistributor.distribute(exponential)
 

@@ -175,6 +175,156 @@ def minPayloadAllDevicePoSCSVCreate(sim_occurrence_history, edns):
             minPayloadAllSFDevicePoS.write(line + '\n')
 
 
+def ackDeviceNumberCase(sim_occurrence_history, edns):
+    pt = 'Min'
+    occurrence_count = len(sim_occurrence_history)
+    csvAck = ["nodeCount, NaiveAggregation, BooleanExpressionAggregation"]
+    psoltr = "/ProposedSolutionTraffic"
+
+    for edn in edns:
+        ackSizeWOExp = 0
+        ackSizeWExp = 0
+        for occ in sim_occurrence_history:
+            sim_res_dir = sim_occurrence_history[occ][edn][pt]
+
+            with open(sim_res_dir + psoltr) as psoltr_f:
+                psoltr_content = psoltr_f.readlines()
+            psoltr_content = [x.strip() for x in psoltr_content]
+
+            psoltr_json_r = json2obj(psoltr_content[0])
+
+            ackSizeWOExp += ast.literal_eval(psoltr_json_r.DLAckSzWOExp)
+            ackSizeWExp += ast.literal_eval(psoltr_json_r.DLAckSzWExp)
+
+        avgAckSizeWOExp = ackSizeWOExp / float(occurrence_count)
+        avgAckSizeWExp = ackSizeWExp / float(occurrence_count)
+
+        csvAck.append(str(edn) + "," + str(avgAckSizeWOExp) + "," + str(avgAckSizeWExp))
+
+    with open('ackDeviceNumberCase.csv', 'a') as ackDeviceNumberCase:
+        for line in csvAck:
+            ackDeviceNumberCase.write(line + '\n')
+
+def ackPayloadTypeCase(sim_occurrence_history, pts):
+    _pt = {'Min': 1, 'Max': 3, 'Avg': 2}
+    edn = 5000
+    occurrence_count = len(sim_occurrence_history)
+    csvAck = ["payloadType, NaiveAggregation, BooleanExpressionAggregation"]
+    psoltr = "/ProposedSolutionTraffic"
+
+    for pt in pts:
+        ackSizeWOExp = 0
+        ackSizeWExp = 0
+        for occ in sim_occurrence_history:
+            sim_res_dir = sim_occurrence_history[occ][edn][pt]
+
+            with open(sim_res_dir + psoltr) as psoltr_f:
+                psoltr_content = psoltr_f.readlines()
+            psoltr_content = [x.strip() for x in psoltr_content]
+
+            psoltr_json_r = json2obj(psoltr_content[0])
+
+            ackSizeWOExp += ast.literal_eval(psoltr_json_r.DLAckSzWOExp)
+            ackSizeWExp += ast.literal_eval(psoltr_json_r.DLAckSzWExp)
+
+        avgAckSizeWOExp = ackSizeWOExp / float(occurrence_count)
+        avgAckSizeWExp = ackSizeWExp / float(occurrence_count)
+
+        csvAck.append(str(_pt[pt]) + "," + str(avgAckSizeWOExp) + "," + str(avgAckSizeWExp))
+
+    with open('ackPayloadTypeCase.csv', 'a') as ackPayloadTypeCase:
+        for line in csvAck:
+            ackPayloadTypeCase.write(line + '\n')
+
+
+def performanceMetricsDeviceNumberCase(sim_occurrence_history, edns):
+    pt = 'Min'
+    occurrence_count = len(sim_occurrence_history)
+    csvAck = ["nodeCount, Simulation, ULMsgNm, DLACKNm"]
+    lpa = "/LorawanPureAloha"
+    psoltr = "/ProposedSolutionTraffic"
+
+    for edn in edns:
+        PA_ULMsgNm = 0
+        PA_DLACKNm = 0
+        PS_ULMsgNm = 0
+        PS_DLACKNm = 0
+        for occ in sim_occurrence_history:
+            sim_res_dir = sim_occurrence_history[occ][str(edn)][pt]
+
+            with open(sim_res_dir + psoltr) as psoltr_f:
+                psoltr_content = psoltr_f.readlines()
+            psoltr_content = [x.strip() for x in psoltr_content]
+
+            with open(sim_res_dir + lpa) as lpa_f:
+                lpa_content = lpa_f.readlines()
+                lpa_content = [x.strip() for x in lpa_content]
+
+            psoltr_json_r = json2obj(psoltr_content[0])
+            lpa_json_r = json2obj(lpa_content[0])
+
+            PA_ULMsgNm += ast.literal_eval(lpa_json_r.ULMsgCnt)
+            PA_DLACKNm += ast.literal_eval(lpa_json_r.DLAckCnt)
+            PS_ULMsgNm += ast.literal_eval(psoltr_json_r.ULXmtCnt)
+            PS_DLACKNm += ast.literal_eval(psoltr_json_r.DLAckCount)
+
+        avg_PA_ULMsgNm = PA_ULMsgNm / float(occurrence_count)
+        avg_PA_DLACKNm = PA_DLACKNm / float(occurrence_count)
+        avg_PS_ULMsgNm = PS_ULMsgNm / float(occurrence_count)
+        avg_PS_DLACKNm = PS_DLACKNm / float(occurrence_count)
+
+        csvAck.append(str(edn) + "," + "PS" + "," + str(avg_PS_ULMsgNm) + "," + str(avg_PS_DLACKNm))
+        csvAck.append(str(edn) + "," + "PA" + "," + str(avg_PA_ULMsgNm) + "," + str(avg_PA_DLACKNm))
+
+    with open('performanceMetricsDeviceNumberCase.csv', 'a') as performanceMetricsDeviceNumberCase:
+        for line in csvAck:
+            performanceMetricsDeviceNumberCase.write(line + '\n')
+
+
+def performanceMetricsPayloadTypeCase(sim_occurrence_history, pts):
+    _pt = {'Min': 1, 'Max': 3, 'Avg': 2}
+    edn = 5000
+    occurrence_count = len(sim_occurrence_history)
+    csvAck = ["payloadType, Simulation, ULMsgNm, DLACKNm"]
+    lpa = "/LorawanPureAloha"
+    psoltr = "/ProposedSolutionTraffic"
+
+    for pt in pts:
+        PA_ULMsgNm = 0
+        PA_DLACKNm = 0
+        PS_ULMsgNm = 0
+        PS_DLACKNm = 0
+        for occ in sim_occurrence_history:
+            sim_res_dir = sim_occurrence_history[occ][str(edn)][pt]
+
+            with open(sim_res_dir + psoltr) as psoltr_f:
+                psoltr_content = psoltr_f.readlines()
+            psoltr_content = [x.strip() for x in psoltr_content]
+
+            with open(sim_res_dir + lpa) as lpa_f:
+                lpa_content = lpa_f.readlines()
+                lpa_content = [x.strip() for x in lpa_content]
+
+            psoltr_json_r = json2obj(psoltr_content[0])
+            lpa_json_r = json2obj(lpa_content[0])
+
+            PA_ULMsgNm += ast.literal_eval(lpa_json_r.ULMsgCnt)
+            PA_DLACKNm += ast.literal_eval(lpa_json_r.DLAckCnt)
+            PS_ULMsgNm += ast.literal_eval(psoltr_json_r.ULXmtCnt)
+            PS_DLACKNm += ast.literal_eval(psoltr_json_r.DLAckCount)
+
+        avg_PA_ULMsgNm = PA_ULMsgNm / float(occurrence_count)
+        avg_PA_DLACKNm = PA_DLACKNm / float(occurrence_count)
+        avg_PS_ULMsgNm = PS_ULMsgNm / float(occurrence_count)
+        avg_PS_DLACKNm = PS_DLACKNm / float(occurrence_count)
+
+        csvAck.append(str(_pt[pt]) + "," + "PS" + "," + str(avg_PS_ULMsgNm) + "," + str(avg_PS_DLACKNm))
+        csvAck.append(str(_pt[pt]) + "," + "PA" + "," + str(avg_PA_ULMsgNm) + "," + str(avg_PA_DLACKNm))
+
+    with open('performanceMetricsPayloadTypeCase.csv', 'a') as performanceMetricsPayloadTypeCase:
+        for line in csvAck:
+            performanceMetricsPayloadTypeCase.write(line + '\n')
+
 def _json_object_hook(d):
     return namedtuple('X', d.keys())(*d.values())
 

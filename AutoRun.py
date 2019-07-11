@@ -32,7 +32,11 @@ def autorun1():
     mtlbio.minPayloadAllDevicePoSCSVCreate(occurrence_history, END_DEVICE_NUMBERs)
 
 def autorun2():
-    SF_TO_MAC_PAYLOAD_IN_BYTEs = {'Max': {7: 250, 8: 250, 9: 123, 10: 59, 11: 59, 12: 59}}
+    SF_TO_MAC_PAYLOAD_IN_BYTEs = {
+        'Min': {7: 10, 8: 10, 9: 10, 10: 10, 11: 10, 12: 10},
+        'Avg': {7: 125, 8: 125, 9: 60, 10: 30, 11: 30, 12: 30},
+        'Max': {7: 250, 8: 250, 9: 123, 10: 59, 11: 59, 12: 59}
+    }
     END_DEVICE_NUMBERs = [5000]
 
     occurrence_history = {}
@@ -49,7 +53,7 @@ def autorun2():
 
     _r_json = json.dumps(occurrence_history)
 
-    pts = ['Max']
+    pts = ['Min', 'Avg', 'Max']
 
     with open("autorun2", 'a') as the_file:
         the_file.write(_r_json)
@@ -57,7 +61,18 @@ def autorun2():
     mtlbio.fivethsndDeviceAllPayloadTypePoSCSVCreate(occurrence_history, pts)
 
 
-def autorun2_continue():
+def autorun1_continue(endDeviceCaseMethod):
+    with open("autorun1") as state_file:
+        content = state_file.readlines()
+        content = [x.strip() for x in content]
+
+    occurrence_history = ast.literal_eval(content[0])
+
+    END_DEVICE_NUMBERs = [1000, 2500, 5000, 7500, 10000]
+
+    endDeviceCaseMethod(occurrence_history, END_DEVICE_NUMBERs)
+
+def autorun2_continue(payloadTypeCaseMethod):
     with open("autorun2") as state_file:
         content = state_file.readlines()
         content = [x.strip() for x in content]
@@ -66,8 +81,16 @@ def autorun2_continue():
 
     pts = ['Min', 'Avg', 'Max']
 
-    mtlbio.fivethsndDeviceAllPayloadTypePoSCSVCreate(occurrence_history, pts)
+    payloadTypeCaseMethod(occurrence_history, pts)
 
 
-autorun2()
+try:
+    autorun1_continue(mtlbio.performanceMetricsDeviceNumberCase)
+except:
+    print("autorun1 file does not esixt")
 
+
+try:
+    autorun2_continue(mtlbio.performanceMetricsPayloadTypeCase)
+except:
+    print("autorun2 file does not esixt")
